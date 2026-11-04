@@ -56,10 +56,6 @@ const schema = z
       .trim()
       .refine((value) => value === "" || /^[A-Za-z]{2}$/.test(value), { message: "Code pays ISO à deux lettres." }),
     timezone: z.string().trim().max(60),
-    currency: z
-      .string()
-      .trim()
-      .refine((value) => value === "" || /^[A-Za-z]{3}$/.test(value), { message: "Code devise ISO à trois lettres." }),
     maxVehicles: z
       .string()
       .trim()
@@ -94,7 +90,6 @@ const DEFAULTS: Values = {
   contactPhone: "",
   countryCode: "CI",
   timezone: "Africa/Abidjan",
-  currency: "XOF",
   maxVehicles: "",
   withAdmin: true,
   adminFullName: "",
@@ -151,7 +146,6 @@ export function OrganizationFormDialog({
         contactPhone: organization.contactPhone ?? "",
         countryCode: organization.countryCode ?? "",
         timezone: organization.timezone,
-        currency: organization.currency,
         maxVehicles: typeof max === "number" ? String(max) : "",
         withAdmin: false,
       });
@@ -168,7 +162,6 @@ export function OrganizationFormDialog({
         contactPhone: values.contactPhone || undefined,
         countryCode: values.countryCode ? values.countryCode.toUpperCase() : undefined,
         timezone: values.timezone || undefined,
-        currency: values.currency ? values.currency.toUpperCase() : undefined,
         settings: toSettings(values.maxVehicles, organization.settings),
       };
       update.mutate(
@@ -191,7 +184,6 @@ export function OrganizationFormDialog({
       contactPhone: values.contactPhone || undefined,
       countryCode: values.countryCode ? values.countryCode.toUpperCase() : undefined,
       timezone: values.timezone || undefined,
-      currency: values.currency ? values.currency.toUpperCase() : undefined,
       settings: toSettings(values.maxVehicles),
       admin: values.withAdmin
         ? {
@@ -270,7 +262,7 @@ export function OrganizationFormDialog({
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <OrganizationTextField control={form.control} name="countryCode" label="Pays" placeholder="CI" />
               <OrganizationTextField
                 control={form.control}
@@ -278,7 +270,6 @@ export function OrganizationFormDialog({
                 label="Fuseau horaire"
                 placeholder="Africa/Abidjan"
               />
-              <OrganizationTextField control={form.control} name="currency" label="Devise" placeholder="XOF" />
             </div>
 
             <OrganizationTextField

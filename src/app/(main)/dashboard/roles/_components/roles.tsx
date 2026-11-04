@@ -20,7 +20,7 @@ import { getRolesColumns } from "./roles-table/columns";
 import { CUSTOM_GROUP, type RoleRow, SYSTEM_GROUP } from "./roles-table/data";
 import { RolesTable } from "./roles-table/table";
 
-const ROLE_ORDER = ["super_admin", "admin", "supervisor", "operator", "viewer"];
+const ROLE_ORDER = ["super_admin", "admin", "operator"];
 
 export function Roles() {
   const roles = useRoles();

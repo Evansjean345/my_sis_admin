@@ -6,13 +6,21 @@ import { cn } from "cn";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { Separator } from "@/components/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { getPreference } from "@/server/server-actions";
 
 import { AccountSwitcher } from "./_components/header/account-switcher";
 import { ThemeSwitcher } from "./_components/header/theme-switcher";
+import { AlertCounter } from "./_components/header/alert-counter";
+import DateTimer from "./_components/header/date-timer";
 
-export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
+export default async function Layout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
   const [variant, collapsible] = await Promise.all([
@@ -55,7 +63,9 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
                 className="mx-2 data-[orientation=vertical]:h-4 data-[orientation=vertical]:self-center"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <DateTimer />
+              <AlertCounter />
               <ThemeSwitcher />
               <AccountSwitcher />
             </div>

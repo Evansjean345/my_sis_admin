@@ -1,7 +1,9 @@
+/**
+ * Plus de double validation (API, migration 016) : une commande naît
+ * `approved` (acceptée, pas encore émise), puis queued → sent → acknowledged.
+ */
 export type CommandStatus =
-  | "pending_validation"
-  | "validated"
-  | "rejected"
+  | "approved"
   | "queued"
   | "sent"
   | "acknowledged"

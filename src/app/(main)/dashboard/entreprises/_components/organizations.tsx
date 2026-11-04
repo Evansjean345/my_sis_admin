@@ -61,7 +61,6 @@ export function Organizations() {
         telephone: organization.contactPhone ?? "",
         pays: organization.countryCode ?? "",
         fuseau: organization.timezone,
-        devise: organization.currency,
         statut: organization.isActive ? "active" : "inactive",
         creee_le: formatDate(organization.createdAt),
       })),
@@ -183,7 +182,6 @@ export function Organizations() {
                       <TableHead>Entreprise</TableHead>
                       <TableHead className="hidden md:table-cell">Contact</TableHead>
                       <TableHead className="hidden lg:table-cell">Pays / fuseau</TableHead>
-                      <TableHead className="hidden lg:table-cell">Devise</TableHead>
                       <TableHead>État</TableHead>
                       <TableHead className="hidden xl:table-cell">Créée le</TableHead>
                       <TableHead className="w-12">
@@ -212,9 +210,6 @@ export function Organizations() {
                         </TableCell>
                         <TableCell className="hidden text-muted-foreground lg:table-cell">
                           {[organization.countryCode, organization.timezone].filter(Boolean).join(" · ")}
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground lg:table-cell">
-                          {organization.currency}
                         </TableCell>
                         <TableCell>
                           {organization.isActive ? (

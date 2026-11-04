@@ -1,11 +1,19 @@
 import { api } from "@/lib/axios";
 import type { ApiResponse } from "@/types/api";
-import type { AuthSession, ChangePasswordPayload, CurrentUser, LoginPayload } from "@/types/auth";
+import type {
+  AuthSession,
+  ChangePasswordPayload,
+  CurrentUser,
+  LoginPayload,
+} from "@/types/auth";
 
 export const authService = {
   /** POST /auth/login */
   async login(payload: LoginPayload): Promise<AuthSession> {
-    const { data } = await api.post<ApiResponse<AuthSession>>("/auth/login", payload);
+    const { data } = await api.post<ApiResponse<AuthSession>>(
+      "/auth/login",
+      payload,
+    );
     return data.data;
   },
 
@@ -22,7 +30,10 @@ export const authService = {
 
   /** POST /users/me/password — renvoie une NOUVELLE session (les anciens jetons sont révoqués). */
   async changePassword(payload: ChangePasswordPayload): Promise<AuthSession> {
-    const { data } = await api.post<ApiResponse<AuthSession>>("/users/me/password", payload);
+    const { data } = await api.post<ApiResponse<AuthSession>>(
+      "/users/me/password",
+      payload,
+    );
     return data.data;
   },
 };

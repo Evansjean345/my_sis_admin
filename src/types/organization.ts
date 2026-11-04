@@ -17,7 +17,6 @@ export interface Organization {
   contactPhone: string | null;
   countryCode: string | null;
   timezone: string;
-  currency: string;
   isActive: boolean;
   settings: Record<string, unknown>;
   createdAt: string;
@@ -72,7 +71,6 @@ export interface CreateOrganizationPayload {
   contactPhone?: string;
   countryCode?: string;
   timezone?: string;
-  currency?: string;
   settings?: Record<string, unknown>;
   admin?: OrganizationAdminPayload;
 }
@@ -84,7 +82,6 @@ export interface UpdateOrganizationPayload {
   contactPhone?: string;
   countryCode?: string;
   timezone?: string;
-  currency?: string;
   isActive?: boolean;
   settings?: Record<string, unknown>;
 }

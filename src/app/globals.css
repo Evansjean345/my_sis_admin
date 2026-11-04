@@ -56,41 +56,89 @@
 These serve as the fallback; there is no separate default.css file. */
 :root {
   --radius: 0.625rem;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(30.58% 0.06845 244.386);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(27.757% 0.07156 252.091);
-  --primary: oklch(28.069% 0.07218 251.11);
-  --primary-foreground: oklch(0.985 0 0);
+  /*
+  Card dashboard
+  */
+  --card: #ffffff;
+  /*
+  Card subtitle text-color
+  */
+  --card-foreground: #1a2332;
+  /*
+  popover background text
+  */
+  --popover: oklch(0.97 0 0);
+  /*
+  popover over text
+  */
+  --popover-foreground: #1a2332; /*
+  tableau text-color primary titles
+  */
+  --primary: #1a2332;
+  /*
+  Title background
+  */
+  --primary-foreground: oklch(0.97 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted: #286ea8;
+  /*
+  sub-titles text color
+  */
+  --muted-foreground: #1a2332;
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /*
+  Dashboard border
+  */
+  --border: #102b46;
+  --input: oklch(18.821% 0.03832 242.94);
+  --ring: oklch(18.821% 0.03832 242.94);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(30.072% 0.07724 251.29);
+  /*
+  sidebard background
+  */
+  --sidebar: #0e508d;
+  /*sidebar text*/
+  --sidebar-foreground: #f8fafc;
+  /*
   --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  */
+  --sidebar-primary: #94a3b8;
+  /*
+  sidebar active
+  */
+  --sidebar-primary-foreground: #f0f4f8;
+  /*
+  sidebar active found overflow
+  */
+  --sidebar-accent: #183b5e;
+  /*
+  sidebar active Text
+  */
+  --sidebar-accent-foreground: oklch(0.922 0 0);
+  /*
+  sidebar-border
+  */
+  --sidebar-border: #0d233c;
+  --sidebar-ring: #0d233c;
 
   /* fonts */
   --font-sans: var(--font-geist);
   --font-mono: var(--font-geist-mono);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* new background*/
+  --background: #f0f4f8;
+  /* old background*/
+  /* --background: --foreground: oklch(0.145 0 0);*/
+  /*
+  title text color
+  */
+  --foreground: #1a2332;
 }
 
 .dark {

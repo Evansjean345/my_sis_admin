@@ -20,7 +20,7 @@ export const PERMISSION_RESOURCES = [
   "incident",
   "report",
   "command",
-  "billing",
+  "audit",
 ] as const;
 
 export type AccessLevel = "full" | "partial" | "read" | "none";

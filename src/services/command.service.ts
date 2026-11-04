@@ -119,8 +119,9 @@ export const commandService = {
 
 /**
  * Immobilisation : reste sur les routes `/security/*` (pas de variante admin).
- * Le cas d'usage applique le garde-fou de vitesse, la fraîcheur de position et
- * la double validation dans l'organisation de l'OPÉRATEUR connecté.
+ * Le cas d'usage applique le garde-fou de vitesse puis émet la commande dans la
+ * foulée (plus de double validation). Ouvert aux trois rôles
+ * (`command:immobilize`).
  */
 export const securityService = {
   /**

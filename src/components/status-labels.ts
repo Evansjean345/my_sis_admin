@@ -40,10 +40,7 @@ export const vehicleTypeLabels: Record<VehicleType, string> = {
 };
 
 const commandStatusMap: Record<string, Meta> = {
-  pending_validation: { label: "À valider", tone: "warning" },
-  validated: { label: "Validée", tone: "info" },
-  approved: { label: "Approuvée", tone: "info" },
-  rejected: { label: "Rejetée", tone: "danger" },
+  approved: { label: "Acceptée", tone: "info" },
   queued: { label: "En file", tone: "info" },
   sent: { label: "Envoyée", tone: "info" },
   acknowledged: { label: "Acquittée", tone: "success" },
@@ -87,14 +84,15 @@ export const PERMISSION_LABELS: Record<string, string> = {
   incident: "Incidents",
   report: "Rapports",
   command: "Commandes",
-  billing: "Facturation",
+  audit: "Journal d'audit",
 };
 
 export const PERMISSION_ACTION_LABELS: Record<string, string> = {
   "*": "tout",
   read: "lecture",
-  request: "demande",
-  validate: "validation",
+  write: "écriture",
+  immobilize: "coupure / rétablissement moteur",
+  sensitive: "commandes sensibles",
 };
 
 export function permissionLabel(permission: string): string {

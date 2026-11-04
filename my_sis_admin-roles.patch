@@ -1,0 +1,287 @@
+From 94b4fc9c6ef63cf1629802a5dcaee4dfd3dcbc79 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 29 Oct 2026 10:31:42 +0000
+Subject: [PATCH] =?UTF-8?q?feat(roles):=20aligner=20le=20tableau=20de=20bo?=
+ =?UTF-8?q?rd=20sur=20les=20trois=20r=C3=B4les=20et=20la=20fin=20de=20la?=
+ =?UTF-8?q?=20double=20validation?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+API (migrations 014 à 016) : rôles super_admin, admin, operator ; plus de
+double validation des immobilisations ; organizations.currency supprimée.
+
+- RoleCode et ordre d'affichage : super_admin, admin, operator
+- matrice des permissions : colonne « Journal d'audit » au lieu de
+  « Facturation » ; actions immobilize / sensitive / write libellées,
+  request / validate retirées
+- statuts de commande : pending_validation, validated, rejected retirés ;
+  approved libellé « Acceptée »
+- entreprises : champ, colonne, export CSV et fiche « Devise » retirés
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01UPf5tjbboRpG6i3rX4NMcj
+---
+ .../[id]/_components/organization-detail.tsx         |  3 +--
+ .../_components/organization-form-dialog.tsx         | 11 +----------
+ .../entreprises/_components/organizations.tsx        |  5 -----
+ .../dashboard/roles/_components/roles-table/data.ts  |  2 +-
+ src/app/(main)/dashboard/roles/_components/roles.tsx |  2 +-
+ src/components/status-labels.ts                      | 12 +++++-------
+ src/services/command.service.ts                      |  5 +++--
+ src/types/command.ts                                 |  8 +++++---
+ src/types/organization.ts                            |  3 ---
+ src/types/role.ts                                    |  3 ++-
+ 10 files changed, 19 insertions(+), 35 deletions(-)
+
+diff --git a/src/app/(main)/dashboard/entreprises/[id]/_components/organization-detail.tsx b/src/app/(main)/dashboard/entreprises/[id]/_components/organization-detail.tsx
+index 0d933f2..83a3f00 100644
+--- a/src/app/(main)/dashboard/entreprises/[id]/_components/organization-detail.tsx
++++ b/src/app/(main)/dashboard/entreprises/[id]/_components/organization-detail.tsx
+@@ -59,7 +59,7 @@ export function OrganizationDetail({ id }: { id: string }) {
+               <StatusBadge tone="orange">Désactivée</StatusBadge>
+             )}
+             <span>
+-              {data.countryCode ?? "—"} · {data.timezone} · {data.currency}
++              {data.countryCode ?? "—"} · {data.timezone}
+             </span>
+           </div>
+         </div>
+@@ -116,7 +116,6 @@ export function OrganizationDetail({ id }: { id: string }) {
+                   { label: "Téléphone", value: data.contactPhone ?? "—" },
+                   { label: "Pays", value: data.countryCode ?? "—" },
+                   { label: "Fuseau horaire", value: data.timezone },
+-                  { label: "Devise", value: data.currency },
+                   { label: "Plafond de véhicules", value: typeof maxVehicles === "number" ? maxVehicles : "—" },
+                   { label: "Identifiant", value: data.id, mono: true },
+                   { label: "Créée le", value: formatDateTime(data.createdAt) },
+diff --git a/src/app/(main)/dashboard/entreprises/_components/organization-form-dialog.tsx b/src/app/(main)/dashboard/entreprises/_components/organization-form-dialog.tsx
+index c4bf456..5150762 100644
+--- a/src/app/(main)/dashboard/entreprises/_components/organization-form-dialog.tsx
++++ b/src/app/(main)/dashboard/entreprises/_components/organization-form-dialog.tsx
+@@ -56,10 +56,6 @@ const schema = z
+       .trim()
+       .refine((value) => value === "" || /^[A-Za-z]{2}$/.test(value), { message: "Code pays ISO à deux lettres." }),
+     timezone: z.string().trim().max(60),
+-    currency: z
+-      .string()
+-      .trim()
+-      .refine((value) => value === "" || /^[A-Za-z]{3}$/.test(value), { message: "Code devise ISO à trois lettres." }),
+     maxVehicles: z
+       .string()
+       .trim()
+@@ -94,7 +90,6 @@ const DEFAULTS: Values = {
+   contactPhone: "",
+   countryCode: "CI",
+   timezone: "Africa/Abidjan",
+-  currency: "XOF",
+   maxVehicles: "",
+   withAdmin: true,
+   adminFullName: "",
+@@ -151,7 +146,6 @@ export function OrganizationFormDialog({
+         contactPhone: organization.contactPhone ?? "",
+         countryCode: organization.countryCode ?? "",
+         timezone: organization.timezone,
+-        currency: organization.currency,
+         maxVehicles: typeof max === "number" ? String(max) : "",
+         withAdmin: false,
+       });
+@@ -168,7 +162,6 @@ export function OrganizationFormDialog({
+         contactPhone: values.contactPhone || undefined,
+         countryCode: values.countryCode ? values.countryCode.toUpperCase() : undefined,
+         timezone: values.timezone || undefined,
+-        currency: values.currency ? values.currency.toUpperCase() : undefined,
+         settings: toSettings(values.maxVehicles, organization.settings),
+       };
+       update.mutate(
+@@ -191,7 +184,6 @@ export function OrganizationFormDialog({
+       contactPhone: values.contactPhone || undefined,
+       countryCode: values.countryCode ? values.countryCode.toUpperCase() : undefined,
+       timezone: values.timezone || undefined,
+-      currency: values.currency ? values.currency.toUpperCase() : undefined,
+       settings: toSettings(values.maxVehicles),
+       admin: values.withAdmin
+         ? {
+@@ -270,7 +262,7 @@ export function OrganizationFormDialog({
+               />
+             </div>
+ 
+-            <div className="grid gap-4 sm:grid-cols-3">
++            <div className="grid gap-4 sm:grid-cols-2">
+               <OrganizationTextField control={form.control} name="countryCode" label="Pays" placeholder="CI" />
+               <OrganizationTextField
+                 control={form.control}
+@@ -278,7 +270,6 @@ export function OrganizationFormDialog({
+                 label="Fuseau horaire"
+                 placeholder="Africa/Abidjan"
+               />
+-              <OrganizationTextField control={form.control} name="currency" label="Devise" placeholder="XOF" />
+             </div>
+ 
+             <OrganizationTextField
+diff --git a/src/app/(main)/dashboard/entreprises/_components/organizations.tsx b/src/app/(main)/dashboard/entreprises/_components/organizations.tsx
+index e36299f..bf4c858 100644
+--- a/src/app/(main)/dashboard/entreprises/_components/organizations.tsx
++++ b/src/app/(main)/dashboard/entreprises/_components/organizations.tsx
+@@ -61,7 +61,6 @@ export function Organizations() {
+         telephone: organization.contactPhone ?? "",
+         pays: organization.countryCode ?? "",
+         fuseau: organization.timezone,
+-        devise: organization.currency,
+         statut: organization.isActive ? "active" : "inactive",
+         creee_le: formatDate(organization.createdAt),
+       })),
+@@ -183,7 +182,6 @@ export function Organizations() {
+                       <TableHead>Entreprise</TableHead>
+                       <TableHead className="hidden md:table-cell">Contact</TableHead>
+                       <TableHead className="hidden lg:table-cell">Pays / fuseau</TableHead>
+-                      <TableHead className="hidden lg:table-cell">Devise</TableHead>
+                       <TableHead>État</TableHead>
+                       <TableHead className="hidden xl:table-cell">Créée le</TableHead>
+                       <TableHead className="w-12">
+@@ -213,9 +211,6 @@ export function Organizations() {
+                         <TableCell className="hidden text-muted-foreground lg:table-cell">
+                           {[organization.countryCode, organization.timezone].filter(Boolean).join(" · ")}
+                         </TableCell>
+-                        <TableCell className="hidden text-muted-foreground lg:table-cell">
+-                          {organization.currency}
+-                        </TableCell>
+                         <TableCell>
+                           {organization.isActive ? (
+                             <StatusBadge tone="success">Active</StatusBadge>
+diff --git a/src/app/(main)/dashboard/roles/_components/roles-table/data.ts b/src/app/(main)/dashboard/roles/_components/roles-table/data.ts
+index 5a1ec1c..f813ef7 100644
+--- a/src/app/(main)/dashboard/roles/_components/roles-table/data.ts
++++ b/src/app/(main)/dashboard/roles/_components/roles-table/data.ts
+@@ -20,7 +20,7 @@ export const PERMISSION_RESOURCES = [
+   "incident",
+   "report",
+   "command",
+-  "billing",
++  "audit",
+ ] as const;
+ 
+ export type AccessLevel = "full" | "partial" | "read" | "none";
+diff --git a/src/app/(main)/dashboard/roles/_components/roles.tsx b/src/app/(main)/dashboard/roles/_components/roles.tsx
+index 5d86ce7..106c895 100644
+--- a/src/app/(main)/dashboard/roles/_components/roles.tsx
++++ b/src/app/(main)/dashboard/roles/_components/roles.tsx
+@@ -20,7 +20,7 @@ import { getRolesColumns } from "./roles-table/columns";
+ import { CUSTOM_GROUP, type RoleRow, SYSTEM_GROUP } from "./roles-table/data";
+ import { RolesTable } from "./roles-table/table";
+ 
+-const ROLE_ORDER = ["super_admin", "admin", "supervisor", "operator", "viewer"];
++const ROLE_ORDER = ["super_admin", "admin", "operator"];
+ 
+ export function Roles() {
+   const roles = useRoles();
+diff --git a/src/components/status-labels.ts b/src/components/status-labels.ts
+index 0ca2546..be0ffaf 100644
+--- a/src/components/status-labels.ts
++++ b/src/components/status-labels.ts
+@@ -40,10 +40,7 @@ export const vehicleTypeLabels: Record<VehicleType, string> = {
+ };
+ 
+ const commandStatusMap: Record<string, Meta> = {
+-  pending_validation: { label: "À valider", tone: "warning" },
+-  validated: { label: "Validée", tone: "info" },
+-  approved: { label: "Approuvée", tone: "info" },
+-  rejected: { label: "Rejetée", tone: "danger" },
++  approved: { label: "Acceptée", tone: "info" },
+   queued: { label: "En file", tone: "info" },
+   sent: { label: "Envoyée", tone: "info" },
+   acknowledged: { label: "Acquittée", tone: "success" },
+@@ -87,14 +84,15 @@ export const PERMISSION_LABELS: Record<string, string> = {
+   incident: "Incidents",
+   report: "Rapports",
+   command: "Commandes",
+-  billing: "Facturation",
++  audit: "Journal d'audit",
+ };
+ 
+ export const PERMISSION_ACTION_LABELS: Record<string, string> = {
+   "*": "tout",
+   read: "lecture",
+-  request: "demande",
+-  validate: "validation",
++  write: "écriture",
++  immobilize: "coupure / rétablissement moteur",
++  sensitive: "commandes sensibles",
+ };
+ 
+ export function permissionLabel(permission: string): string {
+diff --git a/src/services/command.service.ts b/src/services/command.service.ts
+index aa3f645..b94e9a9 100644
+--- a/src/services/command.service.ts
++++ b/src/services/command.service.ts
+@@ -119,8 +119,9 @@ export const commandService = {
+ 
+ /**
+  * Immobilisation : reste sur les routes `/security/*` (pas de variante admin).
+- * Le cas d'usage applique le garde-fou de vitesse, la fraîcheur de position et
+- * la double validation dans l'organisation de l'OPÉRATEUR connecté.
++ * Le cas d'usage applique le garde-fou de vitesse puis émet la commande dans la
++ * foulée (plus de double validation). Ouvert aux trois rôles
++ * (`command:immobilize`).
+  */
+ export const securityService = {
+   /**
+diff --git a/src/types/command.ts b/src/types/command.ts
+index 7e03479..cfaab43 100644
+--- a/src/types/command.ts
++++ b/src/types/command.ts
+@@ -1,7 +1,9 @@
++/**
++ * Plus de double validation (API, migration 016) : une commande naît
++ * `approved` (acceptée, pas encore émise), puis queued → sent → acknowledged.
++ */
+ export type CommandStatus =
+-  | "pending_validation"
+-  | "validated"
+-  | "rejected"
++  | "approved"
+   | "queued"
+   | "sent"
+   | "acknowledged"
+diff --git a/src/types/organization.ts b/src/types/organization.ts
+index 7daa563..e749da5 100644
+--- a/src/types/organization.ts
++++ b/src/types/organization.ts
+@@ -17,7 +17,6 @@ export interface Organization {
+   contactPhone: string | null;
+   countryCode: string | null;
+   timezone: string;
+-  currency: string;
+   isActive: boolean;
+   settings: Record<string, unknown>;
+   createdAt: string;
+@@ -72,7 +71,6 @@ export interface CreateOrganizationPayload {
+   contactPhone?: string;
+   countryCode?: string;
+   timezone?: string;
+-  currency?: string;
+   settings?: Record<string, unknown>;
+   admin?: OrganizationAdminPayload;
+ }
+@@ -84,7 +82,6 @@ export interface UpdateOrganizationPayload {
+   contactPhone?: string;
+   countryCode?: string;
+   timezone?: string;
+-  currency?: string;
+   isActive?: boolean;
+   settings?: Record<string, unknown>;
+ }
+diff --git a/src/types/role.ts b/src/types/role.ts
+index e38a666..f166ad9 100644
+--- a/src/types/role.ts
++++ b/src/types/role.ts
+@@ -1,4 +1,5 @@
+-export type RoleCode = "super_admin" | "admin" | "supervisor" | "operator" | "viewer" | (string & {});
++/** Rôles système depuis la migration 016 de l'API ; un rôle propre à une organisation garde son code libre. */
++export type RoleCode = "super_admin" | "admin" | "operator" | (string & {});
+ 
+ /** GET /roles — champs en snake_case pour `is_system`, tel que renvoyé par l'API. */
+ export interface Role {
+-- 
+2.43.0
+

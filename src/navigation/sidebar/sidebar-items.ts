@@ -16,6 +16,17 @@ import {
   ServerCog,
   SquareParking,
   ShieldCog,
+  MapPinned,
+  Map,
+  BellRing,
+  Gauge,
+  Clock3,
+  UserGroupIcon,
+  FileText,
+  CarIcon,
+  CarBattery,
+  CarTaxiFront,
+  TriangleAlert,
 } from "lucide-react";
 
 export type NavBadge = "new" | "soon";
@@ -75,9 +86,39 @@ export const sidebarItems: NavGroup[] = [
       },
       {
         id: "fleet",
-        title: "Suivi en temps réel",
+        title: "Tracking GPS",
         url: "/dashboard/fleet",
-        icon: MapPin,
+        icon: MapPinned,
+      },
+      {
+        id: "zone",
+        title: "Zone géographiques",
+        url: "/dashboard/zone",
+        icon: Map,
+      },
+      {
+        id: "speed",
+        title: "Contrôle des vitesses",
+        url: "/dashboard/speed",
+        icon: Gauge,
+      },
+      {
+        id: "clock",
+        title: "Gestion des horaires",
+        url: "/dashboard/clock",
+        icon: Clock3,
+      },
+      {
+        id: "email",
+        title: "Centres d'alertes SMS",
+        url: "/dashboard/mail",
+        icon: BellRing,
+      },
+      {
+        id: "incident",
+        title: "Gestion des incidents",
+        url: "/dashboard/incidents",
+        icon: TriangleAlert,
       },
       {
         id: "channel",
@@ -89,13 +130,13 @@ export const sidebarItems: NavGroup[] = [
         id: "vehicles",
         title: "Véhicules",
         url: "/dashboard/vehicles",
-        icon: Truck,
+        icon: CarIcon,
       },
       {
         id: "device",
         title: "Trackers",
         url: "/dashboard/device",
-        icon: Cpu,
+        icon: CarBattery,
       },
       {
         id: "entreprises",
@@ -113,13 +154,19 @@ export const sidebarItems: NavGroup[] = [
         id: "group_vehicle",
         title: "Administrer une Flotte",
         url: "/dashboard/group_vehicle",
-        icon: SquareParking,
+        icon: CarTaxiFront,
       },
       {
         id: "audit",
-        title: "Zone d'audit",
+        title: "Rapports et Exports",
         url: "/dashboard/audit",
-        icon: ShieldCog,
+        icon: FileText,
+      },
+      {
+        id: "driver",
+        title: "Conducteurs",
+        url: "/dashboard/driver",
+        icon: UserGroupIcon,
       },
     ],
   },
@@ -127,12 +174,6 @@ export const sidebarItems: NavGroup[] = [
     id: 2,
     label: "Utilsateurs & Permissions",
     items: [
-      {
-        id: "email",
-        title: "alertes et notifications",
-        url: "/dashboard/mail",
-        icon: Mail,
-      },
       {
         id: "invoice",
         title: "Factures",
@@ -159,33 +200,4 @@ export const sidebarItems: NavGroup[] = [
       },
     ],
   },
-  /*
-  {
-    id: 3,
-    label: "Legacy",
-    items: [
-      {
-        id: "legacy-dashboards",
-        title: "Dashboards",
-        subItems: [
-          {
-            id: "legacy-default",
-            title: "Default V1",
-            url: "/dashboard/default-v1",
-          },
-          { id: "legacy-crm", title: "CRM V1", url: "/dashboard/crm-v1" },
-          {
-            id: "legacy-finance",
-            title: "Finance V1",
-            url: "/dashboard/finance-v1",
-          },
-          {
-            id: "legacy-analytics",
-            title: "Analytics V1",
-            url: "/dashboard/analytics-v1",
-          },
-        ],
-      },
-    ],
-  }, */
 ];

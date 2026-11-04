@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
 import { useShallow } from "zustand/react/shallow";
@@ -15,8 +14,6 @@ import {
 } from "@/components/ui/sidebar";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
-
-import Logo from "../../../../../../media/sisbm-core.jpeg";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 
@@ -38,7 +35,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link prefetch={false} href="/dashboard/default">
-              <Image src={Logo} alt="Logo" className="h-24 w-24 mt-8 object-contain rounded-lg" />
+              {collapsible && variant ? (
+                <div className="flex items-center justify-start gap-4 w-full">
+                  <div className="text-[#F8FAFC] text-xl font-extrabold">
+                    SISBM CORE
+                  </div>
+                  <div className="flex justify-evenly items-center p-1 border border-[#10B981] w-12 h-4 rounded-2xl">
+                    <div className="rounded-full h-1 w-1 bg-[#10B981] animate-ping"></div>
+                    <div className="text-[10px] text-[#10B981] font-extrabold">
+                      live
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <></>
+              )}
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>

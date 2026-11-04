@@ -59,7 +59,7 @@ export function OrganizationDetail({ id }: { id: string }) {
               <StatusBadge tone="orange">Désactivée</StatusBadge>
             )}
             <span>
-              {data.countryCode ?? "—"} · {data.timezone} · {data.currency}
+              {data.countryCode ?? "—"} · {data.timezone}
             </span>
           </div>
         </div>
@@ -116,7 +116,6 @@ export function OrganizationDetail({ id }: { id: string }) {
                   { label: "Téléphone", value: data.contactPhone ?? "—" },
                   { label: "Pays", value: data.countryCode ?? "—" },
                   { label: "Fuseau horaire", value: data.timezone },
-                  { label: "Devise", value: data.currency },
                   { label: "Plafond de véhicules", value: typeof maxVehicles === "number" ? maxVehicles : "—" },
                   { label: "Identifiant", value: data.id, mono: true },
                   { label: "Créée le", value: formatDateTime(data.createdAt) },
