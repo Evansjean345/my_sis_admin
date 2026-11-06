@@ -5,6 +5,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { scheduleService } from "@/services/schedule.service";
 import type {
   CreateSchedulePayload,
+  ScheduleHistoryParams,
   ScheduleListParams,
   ScheduleMode,
   ScheduleWindow,
@@ -37,6 +38,22 @@ export function useSchedule(id: string | undefined) {
     queryKey: queryKeys.schedules.detail(id ?? ""),
     queryFn: () => scheduleService.get(id as string),
     enabled: Boolean(id),
+    retry: false,
+  });
+}
+
+/**
+ * Historique réel agrégé (commandes, refus, délais). Les données passées ne
+ * bougent plus : on les garde 5 minutes, et la période précédente reste
+ * affichée pendant le chargement de la suivante (pas de saut de mise en page).
+ */
+export function useScheduleHistory(params: ScheduleHistoryParams, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: queryKeys.schedules.history(params),
+    queryFn: () => scheduleService.history(params),
+    enabled: options.enabled ?? true,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     retry: false,
   });
 }

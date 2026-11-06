@@ -1,5 +1,6 @@
-import { Vehicles } from "./_components/vehicles";
+import { VehicleDetailView } from "./_components/vehicle-detail";
 
-export default function Page() {
-  return <Vehicles />;
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <VehicleDetailView id={id} />;
 }

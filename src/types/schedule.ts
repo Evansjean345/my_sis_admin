@@ -209,3 +209,104 @@ export const enforcementOutcomeLabels: Record<EnforcementOutcome, string> = {
 };
 
 export const DEFAULT_TIMEZONE = "Africa/Abidjan";
+
+// ---------------------------------------------------------------------------
+// Historique réel — GET /admin/usage-schedules/analytics
+// ---------------------------------------------------------------------------
+
+export interface ScheduleHistoryParams {
+  organizationId?: string;
+  /** Dates civiles incluses (AAAA-MM-JJ), 93 jours au plus. */
+  from: string;
+  to: string;
+  timezone?: string;
+}
+
+export interface CommandTally {
+  requested: number;
+  acknowledged: number;
+  failed: number;
+  expired: number;
+  cancelled: number;
+  inFlight: number;
+}
+
+export interface LatencyStats {
+  /** Secondes. */
+  median: number | null;
+  p90: number | null;
+  samples: number;
+}
+
+export interface ScheduleHistoryDay {
+  date: string;
+  cut: CommandTally;
+  restore: CommandTally;
+  refusals: number;
+  refusedVehicles: number;
+  overrides: number;
+  manualCutsKept: number;
+  transitionsToImmobilized: number;
+  transitionsToFree: number;
+  completed: number;
+  hours: { cut: number[]; restore: number[]; refused: number[] };
+}
+
+export interface ScheduleHistory {
+  range: { from: string; to: string; timezone: string; startsAt: string; endsAt: string };
+  totals: {
+    cut: CommandTally;
+    restore: CommandTally;
+    refusals: number;
+    refusedVehicles: number;
+    overrides: number;
+    manualCutsKept: number;
+    alreadyImmobilized: number;
+    transitionsToImmobilized: number;
+    transitionsToFree: number;
+    vehicles: number;
+    /** Demande → acquittement du boîtier. */
+    commandLatency: { cut: LatencyStats; restore: LatencyStats };
+    /** Entrée / sortie de plage → objectif confirmé. */
+    executionDelay: { cut: LatencyStats; restore: LatencyStats };
+  };
+  refusalsByCode: Array<{ code: string; count: number; vehicles: number }>;
+  days: ScheduleHistoryDay[];
+  vehicles: Array<{
+    id: string;
+    registration: string | null;
+    organizationId: string;
+    cuts: number;
+    restores: number;
+    failures: number;
+    refusals: number;
+    overrides: number;
+  }>;
+  schedules: Array<{
+    id: string;
+    name: string;
+    organizationId: string;
+    transitionsToImmobilized: number;
+    dispatched: number;
+    acknowledged: number;
+    refusals: number;
+    overrides: number;
+    completed: number;
+    medianExecutionSeconds: number | null;
+  }>;
+  /** Premier événement journalisé : avant, refus et dérogations sont inconnus. */
+  journalSince: string | null;
+}
+
+/** Motifs de refus du moteur : codes d'API → libellés métier. */
+export const refusalLabels: Record<string, string> = {
+  E_VEHICLE_IN_MOTION: "Véhicule en mouvement (garde-fou de vitesse)",
+  E_NO_POSITION: "Aucune position connue",
+  E_STALE_POSITION: "Position trop ancienne",
+  E_COMMAND_IN_FLIGHT: "Commande déjà en cours sur le boîtier",
+  E_DEVICE_NO_RELAY: "Boîtier sans relais de coupure",
+  E_NO_DEVICE: "Aucun boîtier associé",
+  E_IMMOBILIZATION_DISABLED: "Immobilisation désactivée",
+  E_DISPATCH_FAILED: "Échec d'envoi à la passerelle",
+  E_UNKNOWN: "Motif inconnu",
+};

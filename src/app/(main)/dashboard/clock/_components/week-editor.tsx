@@ -83,7 +83,7 @@ export function WeekEditor({
           type="button"
           size="sm"
           variant="outline"
-          disabled={disabled || !value.some((w) => w.dayOfWeek === 1)}
+          disabled={Boolean(disabled) || !value.some((w) => w.dayOfWeek === 1)}
           onClick={copyMondayToWeekdays}
         >
           <Copy data-icon="inline-start" />
@@ -93,7 +93,7 @@ export function WeekEditor({
           type="button"
           size="sm"
           variant="ghost"
-          disabled={disabled || value.length === 0}
+          disabled={Boolean(disabled) || value.length === 0}
           onClick={() => onChange([])}
         >
           <Eraser data-icon="inline-start" />

@@ -5,6 +5,8 @@ import type {
   EnforcementPreview,
   GroupScheduleSummary,
   ScheduleAssignmentChange,
+  ScheduleHistory,
+  ScheduleHistoryParams,
   ScheduleListParams,
   ScheduleMode,
   ScheduleTarget,
@@ -23,6 +25,15 @@ import type {
  * variante admin : ils passent par les routes client, ouvertes au joker `*`.
  */
 export const scheduleService = {
+  /**
+   * GET /admin/usage-schedules/analytics?from=&to=&timezone=&organizationId=
+   * Historique RÉEL du moteur planifié, agrégé par le back-end.
+   */
+  async history(params: ScheduleHistoryParams): Promise<ScheduleHistory> {
+    const { data } = await api.get<ApiResponse<ScheduleHistory>>(adminPath("/usage-schedules/analytics"), { params });
+    return data.data;
+  },
+
   /** GET /admin/usage-schedules?organizationId=&search=&isActive=&page=&perPage= */
   async list(params: ScheduleListParams = {}): Promise<Paginated<UsageSchedule>> {
     const { data } = await api.get<Paginated<UsageSchedule>>(adminPath("/usage-schedules"), { params });

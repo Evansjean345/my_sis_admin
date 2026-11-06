@@ -4,7 +4,7 @@ import type { DeviceListParams } from "@/types/device";
 import type { DriverListParams } from "@/types/driver";
 import type { GroupKind, GroupListParams } from "@/types/group";
 import type { OrganizationListParams } from "@/types/organization";
-import type { ScheduleListParams } from "@/types/schedule";
+import type { ScheduleHistoryParams, ScheduleListParams } from "@/types/schedule";
 import type { UserListParams } from "@/types/user";
 import type { VehicleListParams } from "@/types/vehicle";
 
@@ -67,6 +67,7 @@ export const queryKeys = {
     preview: (id: string, at: string | undefined) => ["schedules", "preview", id, at ?? "now"] as const,
     vehicleStatus: (vehicleId: string) => ["schedules", "vehicle-status", vehicleId] as const,
     ofGroup: (groupId: string) => ["schedules", "group", groupId] as const,
+    history: (params: ScheduleHistoryParams) => ["schedules", "history", params] as const,
   },
   drivers: {
     all: ["drivers"] as const,
