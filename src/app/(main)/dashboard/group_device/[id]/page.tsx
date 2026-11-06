@@ -1,8 +1,15 @@
 "use client";
 
-import { DEVICE_GROUP_FAMILY } from "../_components/groups/group-family";
-import { GroupsScreen } from "../_components/groups/groups-screen";
+import { use } from "react";
 
-export default function Page() {
-  return <GroupsScreen family={DEVICE_GROUP_FAMILY} />;
+import { GroupDetailScreen } from "../../_components/groups/group-detail-screen";
+import { DEVICE_GROUP_FAMILY } from "../../_components/groups/group-family";
+
+/**
+ * Page CLIENT : la famille de groupe porte des composants d'icône, qu'une page
+ * serveur ne peut pas transmettre. `use(params)` lit la promesse des paramètres.
+ */
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  return <GroupDetailScreen family={DEVICE_GROUP_FAMILY} id={id} />;
 }

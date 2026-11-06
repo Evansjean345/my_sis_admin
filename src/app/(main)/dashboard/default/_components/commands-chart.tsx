@@ -2,18 +2,8 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-} from "@/components/ui/chart";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { type ChartConfig, ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import type { ActivityDay } from "@/types/admin";
@@ -37,13 +27,7 @@ const config = Object.fromEntries(
  * lisible (hauteur de la colonne) ; l'écart de 2 px entre segments les sépare
  * sans trait de contour.
  */
-export function CommandsChart({
-  days,
-  loading,
-}: {
-  days: ActivityDay[] | undefined;
-  loading: boolean;
-}) {
+export function CommandsChart({ days, loading }: { days: ActivityDay[] | undefined; loading: boolean }) {
   const data = (days ?? []).map((d) => ({ date: d.date, ...d.commands }));
   const totals = OUTCOMES.map((o) => ({
     ...o,
@@ -59,9 +43,7 @@ export function CommandsChart({
         <CardTitle>Commandes envoyées aux boîtiers</CardTitle>
         <CardDescription>
           {formatNumber(all)} commandes sur la période ci-dessous ·{" "}
-          {all > 0
-            ? `${Math.round((totals[0].value / all) * 100)} % acquittées`
-            : "aucune commande"}
+          {all > 0 ? `${Math.round((totals[0].value / all) * 100)} % acquittées` : "aucune commande"}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -70,9 +52,7 @@ export function CommandsChart({
             <li key={t.key} className="flex items-start gap-2 text-sm">
               <LegendSwatch theme={t.theme} />
               <span className="text-muted-foreground">{t.label}</span>
-              <span className="font-medium tabular-nums">
-                {formatNumber(t.value)}
-              </span>
+              <span className="font-medium tabular-nums">{formatNumber(t.value)}</span>
             </li>
           ))}
         </ul>
@@ -80,11 +60,7 @@ export function CommandsChart({
           <Skeleton className="h-60 w-full" />
         ) : (
           <ChartContainer config={config} className="aspect-auto h-60 w-full">
-            <BarChart
-              data={data}
-              margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
-              barSize={barSize}
-            >
+            <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }} barSize={barSize}>
               <CartesianGrid {...GRID_PROPS} />
               <XAxis
                 dataKey="date"
@@ -95,30 +71,17 @@ export function CommandsChart({
                 minTickGap={28}
                 tick={AXIS_TICK}
               />
-              <YAxis
-                width={36}
-                tickLine={false}
-                axisLine={false}
-                tick={AXIS_TICK}
-                allowDecimals={false}
-              />
+              <YAxis width={36} tickLine={false} axisLine={false} tick={AXIS_TICK} allowDecimals={false} />
               <ChartTooltip
                 cursor={{ fill: "var(--muted)", opacity: 0.5 }}
                 content={({ active, payload }) => {
-                  const p = payload?.[0]?.payload as
-                    | (typeof data)[number]
-                    | undefined;
+                  const p = payload?.[0]?.payload as (typeof data)[number] | undefined;
                   if (!active || !p) return null;
                   return (
                     <div className="min-w-44 rounded-lg border bg-background px-3 py-2 text-xs shadow-md">
-                      <div className="mb-1.5 text-muted-foreground capitalize">
-                        {formatDayLong(p.date)}
-                      </div>
+                      <div className="mb-1.5 text-muted-foreground capitalize">{formatDayLong(p.date)}</div>
                       {OUTCOMES.map((o) => (
-                        <div
-                          key={o.key}
-                          className="flex items-center justify-between gap-4"
-                        >
+                        <div key={o.key} className="flex items-center justify-between gap-4">
                           <span className="flex items-center gap-1.5 text-muted-foreground">
                             <span
                               aria-hidden="true"
@@ -127,16 +90,12 @@ export function CommandsChart({
                             />
                             {o.label}
                           </span>
-                          <span className="font-semibold tabular-nums">
-                            {formatNumber(p[o.key])}
-                          </span>
+                          <span className="font-semibold tabular-nums">{formatNumber(p[o.key])}</span>
                         </div>
                       ))}
                       <div className="mt-1.5 flex justify-between border-t pt-1.5">
                         <span className="text-muted-foreground">Total</span>
-                        <span className="font-semibold tabular-nums">
-                          {formatNumber(p.total)}
-                        </span>
+                        <span className="font-semibold tabular-nums">{formatNumber(p.total)}</span>
                       </div>
                     </div>
                   );

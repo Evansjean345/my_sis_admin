@@ -2,14 +2,7 @@
 
 import Link from "next/link";
 
-import {
-  ArrowBigDown,
-  BadgeCheck,
-  ChevronDown,
-  FileTextIcon,
-  KeyRound,
-  LogOut,
-} from "lucide-react";
+import { ArrowBigDown, BadgeCheck, ChevronDown, FileTextIcon, KeyRound, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -59,12 +52,7 @@ export function AccountSwitcher() {
           <ChevronDown className="h-4 w-4" />
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="min-w-56 rounded-lg"
-        side="bottom"
-        align="end"
-        sideOffset={4}
-      >
+      <DropdownMenuContent className="min-w-56 rounded-lg" side="bottom" align="end" sideOffset={4}>
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5">
             <div>
@@ -78,12 +66,8 @@ export function AccountSwitcher() {
             </div>
             <div className="grid min-w-0 flex-1 text-left text-sm leading-tight text-[#102b46]">
               <span className="truncate font-semibold ">{name}</span>
-              <span className="truncate text-muted-foreground text-xs">
-                {user?.email}
-              </span>
-              {roleName ? (
-                <span className="truncate text-xs">{roleName}</span>
-              ) : null}
+              <span className="truncate text-muted-foreground text-xs">{user?.email}</span>
+              {roleName ? <span className="truncate text-xs">{roleName}</span> : null}
             </div>
           </div>
         </DropdownMenuLabel>
@@ -110,9 +94,7 @@ export function AccountSwitcher() {
               </div>
             </div>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Choisissez votre formule d'abonnements
-          </DropdownMenuItem>
+          <DropdownMenuItem>Choisissez votre formule d'abonnements</DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/dashboard/profile?tab=security" prefetch={false}>
               <KeyRound />
@@ -127,11 +109,7 @@ export function AccountSwitcher() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={logout.isPending}
-          onClick={() => logout.mutate()}
-          className="text-red-500"
-        >
+        <DropdownMenuItem disabled={logout.isPending} onClick={() => logout.mutate()} className="text-red-500">
           <LogOut />
           Se déconnecter
         </DropdownMenuItem>

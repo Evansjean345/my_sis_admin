@@ -11,19 +11,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { useLogin } from "@/hooks/api/use-auth";
 import { getErrorMessage } from "@/lib/axios";
@@ -69,11 +59,7 @@ export function LoginForm() {
   }
 
   return (
-    <form
-      noValidate
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="flex flex-col gap-4"
-    >
+    <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <FieldGroup className="gap-4">
         <Controller
           control={form.control}
@@ -111,11 +97,7 @@ export function LoginForm() {
                 <InputGroupAddon align="inline-end">
                   <InputGroupButton
                     size="icon-xs"
-                    aria-label={
-                      showPassword
-                        ? "Masquer le mot de passe"
-                        : "Afficher le mot de passe"
-                    }
+                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                     onClick={() => setShowPassword((v) => !v)}
                   >
                     {showPassword ? <EyeOff /> : <Eye />}
@@ -127,11 +109,7 @@ export function LoginForm() {
           )}
         />
       </FieldGroup>
-      <Button
-        className="w-full bg-[#0E508D]"
-        type="submit"
-        disabled={login.isPending}
-      >
+      <Button className="w-full bg-[#0E508D]" type="submit" disabled={login.isPending}>
         {login.isPending ? <Spinner data-icon="inline-start" /> : null}
         Se connecter
       </Button>

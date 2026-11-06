@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentUser } from "@/hooks/api/use-auth";
 import { useRoles } from "@/hooks/api/use-roles";
 import { useUser } from "@/hooks/api/use-users";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 import { ProfileHeader } from "./profile-header";
 import { ProfileOverview } from "./profile-overview";
@@ -32,12 +33,15 @@ export function Profile() {
   const requested = searchParams.get("tab");
   const tab: ProfileTab = TABS.includes(requested as ProfileTab) ? (requested as ProfileTab) : "overview";
 
+  // Le serveur rend toujours l'état de chargement (session inconnue) : le premier
+  // rendu client doit faire de même, même si l'utilisateur est déjà en cache.
+  const hydrated = useHydrated();
   const me = useCurrentUser();
   const roles = useRoles();
   // Fiche détaillée : exige la permission user:read — l'écran reste utilisable sans.
   const detail = useUser(me.data?.id);
 
-  if (me.isPending) return <LoadingRows rows={6} className="flex flex-col gap-2 px-4" />;
+  if (!hydrated || me.isPending) return <LoadingRows rows={6} className="flex flex-col gap-2 px-4" />;
   if (me.isError) {
     return (
       <div className="px-4">

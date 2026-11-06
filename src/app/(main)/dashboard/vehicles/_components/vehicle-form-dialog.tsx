@@ -7,10 +7,8 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import {
-  vehicleStatusMeta,
-  vehicleTypeLabels,
-} from "@/components/status-labels";
+import { OrganizationSelect } from "@/app/(main)/dashboard/_components/organization/organization-select";
+import { vehicleStatusMeta, vehicleTypeLabels } from "@/components/status-labels";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,27 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { OrganizationSelect } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { useCreateVehicle, useUpdateVehicle } from "@/hooks/api/use-vehicles";
 import { getErrorMessage } from "@/lib/axios";
 import { toNumber } from "@/lib/format";
@@ -57,25 +40,14 @@ const optionalInt = (min: number, max: number, label: string) =>
   z
     .string()
     .trim()
-    .refine(
-      (v) =>
-        v === "" ||
-        (/^\d+(\.\d+)?$/.test(v) && Number(v) >= min && Number(v) <= max),
-      {
-        message: `${label} : entre ${min} et ${max}.`,
-      },
-    );
+    .refine((v) => v === "" || (/^\d+(\.\d+)?$/.test(v) && Number(v) >= min && Number(v) <= max), {
+      message: `${label} : entre ${min} et ${max}.`,
+    });
 
 const schema = z.object({
   /** Organisation propriétaire : exigée à la création, figée ensuite. */
-  organizationId: z
-    .string()
-    .min(1, { message: "Choisir l'organisation propriétaire." }),
-  registration: z
-    .string()
-    .trim()
-    .min(3, { message: "3 caractères minimum." })
-    .max(20),
+  organizationId: z.string().min(1, { message: "Choisir l'organisation propriétaire." }),
+  registration: z.string().trim().min(3, { message: "3 caractères minimum." }).max(20),
   label: z.string().trim().max(80),
   brand: z.string().trim().max(40),
   model: z.string().trim().max(40),
@@ -111,9 +83,7 @@ function toDefaults(vehicle?: Vehicle, organizationId?: string): Values {
     status: vehicle?.status ?? "active",
     vin: vehicle?.vin ?? "",
     odometerKm: vehicle ? String(toNumber(vehicle.odometerKm) ?? "") : "",
-    speedLimitKph: vehicle
-      ? String(toNumber(vehicle.speedLimitKph) ?? "")
-      : "90",
+    speedLimitKph: vehicle ? String(toNumber(vehicle.speedLimitKph) ?? "") : "90",
     immobilizationEnabled: vehicle?.immobilizationEnabled ?? true,
     notes: vehicle?.notes ?? "",
   };
@@ -199,12 +169,9 @@ export function VehicleFormDialog({
         onOpenChange(false);
       },
       onError: (error: unknown) =>
-        toast.error(
-          vehicle ? "Mise à jour impossible" : "Création impossible",
-          {
-            description: getErrorMessage(error),
-          },
-        ),
+        toast.error(vehicle ? "Mise à jour impossible" : "Création impossible", {
+          description: getErrorMessage(error),
+        }),
     };
     if (vehicle) {
       const { vin: _vin, organizationId: _org, ...rest } = payload;
@@ -218,29 +185,20 @@ export function VehicleFormDialog({
     <Dialog open={open} onOpenChange={(next) => !pending && onOpenChange(next)}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>
-            {vehicle ? `Modifier ${vehicle.registration}` : "Nouveau véhicule"}
-          </DialogTitle>
+          <DialogTitle>{vehicle ? `Modifier ${vehicle.registration}` : "Nouveau véhicule"}</DialogTitle>
           <DialogDescription>
-            La limite de vitesse est propre au véhicule : un dépassement
-            déclenche une alerte.
+            La limite de vitesse est propre au véhicule : un dépassement déclenche une alerte.
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          id="vehicle-form"
-          noValidate
-          onSubmit={form.handleSubmit(onSubmit)}
-        >
+        <form id="vehicle-form" noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="gap-4">
             <Controller
               control={form.control}
               name="organizationId"
               render={({ field, fieldState }) => (
                 <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="vehicle-organization">
-                    Organisation
-                  </FieldLabel>
+                  <FieldLabel htmlFor="vehicle-organization">Organisation</FieldLabel>
                   <OrganizationSelect
                     id="vehicle-organization"
                     value={field.value || undefined}
@@ -248,14 +206,8 @@ export function VehicleFormDialog({
                     invalid={fieldState.invalid}
                     disabled={Boolean(vehicle)}
                   />
-                  {vehicle ? (
-                    <FieldDescription>
-                      Un véhicule ne change pas d'organisation.
-                    </FieldDescription>
-                  ) : null}
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
+                  {vehicle ? <FieldDescription>Un véhicule ne change pas d'organisation.</FieldDescription> : null}
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                 </Field>
               )}
             />
@@ -265,18 +217,14 @@ export function VehicleFormDialog({
                 name="registration"
                 render={({ field, fieldState }) => (
                   <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="vehicle-registration">
-                      Immatriculation
-                    </FieldLabel>
+                    <FieldLabel htmlFor="vehicle-registration">Immatriculation</FieldLabel>
                     <Input
                       {...field}
                       id="vehicle-registration"
                       placeholder="4355 ZD 01"
                       aria-invalid={fieldState.invalid}
                     />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -286,14 +234,8 @@ export function VehicleFormDialog({
                 render={({ field, fieldState }) => (
                   <Field className="gap-1.5" data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="vehicle-label">Libellé</FieldLabel>
-                    <Input
-                      {...field}
-                      id="vehicle-label"
-                      placeholder="Camion citerne n°3"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    <Input {...field} id="vehicle-label" placeholder="Camion citerne n°3" />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -306,13 +248,8 @@ export function VehicleFormDialog({
                   control={form.control}
                   name={f.name}
                   render={({ field, fieldState }) => (
-                    <Field
-                      className="gap-1.5"
-                      data-invalid={fieldState.invalid}
-                    >
-                      <FieldLabel htmlFor={`vehicle-${f.name}`}>
-                        {f.label}
-                      </FieldLabel>
+                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor={`vehicle-${f.name}`}>{f.label}</FieldLabel>
                       <Input
                         {...field}
                         value={String(field.value ?? "")}
@@ -321,9 +258,7 @@ export function VehicleFormDialog({
                         inputMode={f.inputMode}
                         aria-invalid={fieldState.invalid}
                       />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     </Field>
                   )}
                 />
@@ -337,10 +272,7 @@ export function VehicleFormDialog({
                 render={({ field }) => (
                   <Field className="gap-1.5">
                     <FieldLabel htmlFor="vehicle-type">Type</FieldLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={(v) => field.onChange(v as VehicleType)}
-                    >
+                    <Select value={field.value} onValueChange={(v) => field.onChange(v as VehicleType)}>
                       <SelectTrigger id="vehicle-type" className="w-full">
                         <SelectValue />
                       </SelectTrigger>
@@ -363,10 +295,7 @@ export function VehicleFormDialog({
                 render={({ field }) => (
                   <Field className="gap-1.5">
                     <FieldLabel htmlFor="vehicle-status">Statut</FieldLabel>
-                    <Select
-                      value={field.value}
-                      onValueChange={(v) => field.onChange(v as VehicleStatus)}
-                    >
+                    <Select value={field.value} onValueChange={(v) => field.onChange(v as VehicleStatus)}>
                       <SelectTrigger id="vehicle-status" className="w-full">
                         <SelectValue />
                       </SelectTrigger>
@@ -396,9 +325,7 @@ export function VehicleFormDialog({
                       placeholder="Optionnel"
                       aria-invalid={fieldState.invalid}
                     />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -408,24 +335,14 @@ export function VehicleFormDialog({
               control={form.control}
               name="immobilizationEnabled"
               render={({ field }) => (
-                <Field
-                  orientation="horizontal"
-                  className="rounded-lg border p-3"
-                >
+                <Field orientation="horizontal" className="rounded-lg border p-3">
                   <FieldContent>
-                    <FieldLabel htmlFor="vehicle-immobilization">
-                      Immobilisation autorisée
-                    </FieldLabel>
+                    <FieldLabel htmlFor="vehicle-immobilization">Immobilisation autorisée</FieldLabel>
                     <FieldDescription>
-                      Permet la coupure carburant à distance (garde-fou de
-                      vitesse appliqué).
+                      Permet la coupure carburant à distance (garde-fou de vitesse appliqué).
                     </FieldDescription>
                   </FieldContent>
-                  <Switch
-                    id="vehicle-immobilization"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch id="vehicle-immobilization" checked={field.value} onCheckedChange={field.onChange} />
                 </Field>
               )}
             />
@@ -436,11 +353,7 @@ export function VehicleFormDialog({
               render={({ field }) => (
                 <Field className="gap-1.5">
                   <FieldLabel htmlFor="vehicle-notes">Notes</FieldLabel>
-                  <Textarea
-                    {...field}
-                    id="vehicle-notes"
-                    placeholder="Informations complémentaires"
-                  />
+                  <Textarea {...field} id="vehicle-notes" placeholder="Informations complémentaires" />
                 </Field>
               )}
             />
@@ -448,11 +361,7 @@ export function VehicleFormDialog({
         </form>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            disabled={pending}
-            onClick={() => onOpenChange(false)}
-          >
+          <Button variant="outline" disabled={pending} onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
           <Button type="submit" form="vehicle-form" disabled={pending}>

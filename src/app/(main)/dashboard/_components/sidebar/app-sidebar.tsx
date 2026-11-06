@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { sidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
+
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 
@@ -37,14 +38,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Link prefetch={false} href="/dashboard/default">
               {collapsible && variant ? (
                 <div className="flex items-center justify-start gap-4 w-full">
-                  <div className="text-[#F8FAFC] text-xl font-extrabold">
-                    SISBM CORE
-                  </div>
+                  <div className="text-[#F8FAFC] text-xl font-extrabold">SISBM CORE</div>
                   <div className="flex justify-evenly items-center p-1 border border-[#10B981] w-12 h-4 rounded-2xl">
-                    <div className="rounded-full h-1 w-1 bg-[#10B981] animate-ping"></div>
-                    <div className="text-[10px] text-[#10B981] font-extrabold">
-                      live
-                    </div>
+                    <div className="rounded-full h-1 w-1 bg-[#10B981] animate-ping" />
+                    <div className="text-[10px] text-[#10B981] font-extrabold">live</div>
                   </div>
                 </div>
               ) : (

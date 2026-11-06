@@ -38,9 +38,7 @@ const DEFAULT_WINDOW: ActivityWindow = 30;
 
 function parseWindow(raw: string | null): ActivityWindow {
   const n = Number(raw);
-  return (ACTIVITY_WINDOWS as readonly number[]).includes(n)
-    ? (n as ActivityWindow)
-    : DEFAULT_WINDOW;
+  return (ACTIVITY_WINDOWS as readonly number[]).includes(n) ? (n as ActivityWindow) : DEFAULT_WINDOW;
 }
 
 /**
@@ -79,37 +77,24 @@ export function AdminDashboard() {
     const qs = next.toString();
     router.replace(qs ? `?${qs}` : "?", { scroll: false });
   };
-  const setOrganization = (id: string | undefined) =>
-    setParam("organizationId", id);
+  const setOrganization = (id: string | undefined) => setParam("organizationId", id);
 
   // 403 : compte sans le joker `*`. Inutile d'afficher dix erreurs identiques.
   if (overview.isError) {
-    const forbidden =
-      overview.error instanceof ApiError && overview.error.status === 403;
+    const forbidden = overview.error instanceof ApiError && overview.error.status === 403;
     return (
       <div className="flex flex-col gap-4 md:gap-6">
-        <PageHeader
-          title="Tableau de bord"
-          description="Vue d'ensemble de la plateforme SISBM"
-        />
+        <PageHeader title="Tableau de bord" description="Vue d'ensemble de la plateforme SISBM" />
         <ErrorState
           error={overview.error}
-          title={
-            forbidden
-              ? "Réservé à l'administration de la plateforme"
-              : undefined
-          }
+          title={forbidden ? "Réservé à l'administration de la plateforme" : undefined}
           onRetry={forbidden ? undefined : () => overview.refetch()}
         />
       </div>
     );
   }
 
-  const statsLoading =
-    vehicles.isPending ||
-    devices.isPending ||
-    users.isPending ||
-    commands.isPending;
+  const statsLoading = vehicles.isPending || devices.isPending || users.isPending || commands.isPending;
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
@@ -118,10 +103,7 @@ export function AdminDashboard() {
         description={
           selected ? (
             <>
-              Vue filtrée sur{" "}
-              <span className="font-medium text-foreground">
-                {selected.name}
-              </span>
+              Vue filtrée sur <span className="font-medium text-foreground">{selected.name}</span>
             </>
           ) : (
             "Vue d'ensemble de la plateforme SISBM — toutes organisations"
@@ -137,9 +119,7 @@ export function AdminDashboard() {
           variant="outline"
           size="sm"
           value={String(days)}
-          onValueChange={(v) =>
-            v && setParam("days", v === String(DEFAULT_WINDOW) ? undefined : v)
-          }
+          onValueChange={(v) => v && setParam("days", v === String(DEFAULT_WINDOW) ? undefined : v)}
           aria-label="Période"
         >
           {ACTIVITY_WINDOWS.map((w) => (
@@ -159,15 +139,10 @@ export function AdminDashboard() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              queryClient.invalidateQueries({ queryKey: queryKeys.admin.all })
-            }
+            onClick={() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.all })}
             disabled={fetching}
           >
-            <RefreshCw
-              data-icon="inline-start"
-              className={fetching ? "animate-spin" : undefined}
-            />
+            <RefreshCw data-icon="inline-start" className={fetching ? "animate-spin" : undefined} />
             Actualiser
           </Button>
         </div>
@@ -183,9 +158,7 @@ export function AdminDashboard() {
           devices={devices.data}
           users={users.data}
           commands={commands.data}
-          organizations={
-            selected ? undefined : overview.data?.organizations.total
-          }
+          organizations={selected ? undefined : overview.data?.organizations.total}
           loading={statsLoading || activity.isPending}
           days={days}
         />
@@ -193,41 +166,25 @@ export function AdminDashboard() {
         <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-3">
           <div className="xl:col-span-2 shadow-xl rounded-xl hover:cursor-pointer xl:hover:scale-95 transition-all bg-[#0E508D]">
             {/* cartes d'activités pour les stats */}
-            <ActivityChart
-              days={activity.data?.days}
-              loading={activity.isPending}
-            />
+            <ActivityChart days={activity.data?.days} loading={activity.isPending} />
           </div>
           {/* Stats en Cercle pour afficher les véhicules  */}
-          <ConnectionDonut
-            counts={vehicles.data?.byConnection}
-            loading={vehicles.isPending}
-          />
+          <ConnectionDonut counts={vehicles.data?.byConnection} loading={vehicles.isPending} />
         </div>
 
         {/* Stats des commandes envoyées par boitier  */}
         <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-3 ">
           <div className="xl:col-span-2 rounded-xl hover:cursor-pointer xl:hover:scale-95 transition-all bg-[#0E508D]">
-            <CommandsChart
-              days={activity.data?.days}
-              loading={activity.isPending}
-            />
+            <CommandsChart days={activity.data?.days} loading={activity.isPending} />
           </div>
           {/* Stats des botiers */}
-          <DeploymentCard
-            devices={devices.data}
-            vehicles={vehicles.data}
-            loading={statsLoading}
-          />
+          <DeploymentCard devices={devices.data} vehicles={vehicles.data} loading={statsLoading} />
         </div>
 
         {/* données sur le parc auto */}
         <div className="grid grid-cols-1 gap-4 md:gap-6 xl:grid-cols-2">
           <div className="rounded-xl shadow-lg hover:cursor-pointer xl:hover:scale-95 transition-all bg-[#0E508D]">
-            <GrowthChart
-              days={activity.data?.days}
-              loading={activity.isPending}
-            />
+            <GrowthChart days={activity.data?.days} loading={activity.isPending} />
           </div>
           <OrganizationsChart
             rows={organizations.data}
@@ -242,10 +199,7 @@ export function AdminDashboard() {
         </div>
         {/* Listes des entreprises */}
         <div className="rounded-xl shadow-lg hover:cursor-pointer xl:hover:scale-95 transition-all bg-[#0E508D]">
-          <OrganizationsTable
-            selectedId={organizationId}
-            onSelect={setOrganization}
-          />
+          <OrganizationsTable selectedId={organizationId} onSelect={setOrganization} />
         </div>
       </div>
     </div>

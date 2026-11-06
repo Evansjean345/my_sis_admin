@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatNumber } from "@/lib/format";
 import type { DeviceStats, VehicleStats } from "@/types/admin";
@@ -17,17 +11,7 @@ import type { DeviceStats, VehicleStats } from "@/types/admin";
  * dessous de 80 %, le remplissage passe en couleur d'attention — l'étape est
  * alors la cause probable de véhicules muets.
  */
-function Meter({
-  label,
-  value,
-  total,
-  hint,
-}: {
-  label: string;
-  value: number;
-  total: number;
-  hint: string;
-}) {
+function Meter({ label, value, total, hint }: { label: string; value: number; total: number; hint: string }) {
   const share = total > 0 ? Math.round((value / total) * 100) : 0;
   const low = total > 0 && share < 80;
   return (
@@ -71,9 +55,7 @@ export function DeploymentCard({
     <Card>
       <CardHeader>
         <CardTitle>Liste des boitiers mis en service</CardTitle>
-        <CardDescription>
-          Du boîtier enregistré à la position reçue
-        </CardDescription>
+        <CardDescription>Du boîtier enregistré à la position reçue</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         {loading || !devices || !vehicles ? (

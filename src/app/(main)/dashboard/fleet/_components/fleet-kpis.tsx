@@ -37,8 +37,7 @@ export function FleetKpis({
   }
 
   const states = vehicles.map((v) => fleetState(v));
-  const count = (pred: (s: (typeof states)[number]) => boolean) =>
-    states.filter(pred).length;
+  const count = (pred: (s: (typeof states)[number]) => boolean) => states.filter(pred).length;
   const inService = count((s) => CATEGORY_OF[s] !== "offline");
   const moving = count((s) => s === "moving" || s === "alert");
   const overspeed = count((s) => s === "alert");
@@ -49,9 +48,7 @@ export function FleetKpis({
   const movingSpeeds = vehicles
     .filter((_, i) => states[i] === "moving" || states[i] === "alert")
     .map((v) => toNumber(v.lastPosition?.speedKph) ?? 0);
-  const avgSpeed = movingSpeeds.length
-    ? movingSpeeds.reduce((a, b) => a + b, 0) / movingSpeeds.length
-    : null;
+  const avgSpeed = movingSpeeds.length ? movingSpeeds.reduce((a, b) => a + b, 0) / movingSpeeds.length : null;
   const operational = total > 0 ? Math.round((inService / total) * 100) : 0;
 
   return (
@@ -94,9 +91,7 @@ export function FleetKpis({
         <MetricCard
           icon={Gauge}
           label="Vitesse moyenne flotte"
-          value={
-            avgSpeed === null ? "— km/h" : `${formatNumber(avgSpeed, 0)} km/h`
-          }
+          value={avgSpeed === null ? "— km/h" : `${formatNumber(avgSpeed, 0)} km/h`}
           hint="Véhicules en déplacement"
         />
       </div>
