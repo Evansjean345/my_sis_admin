@@ -16,6 +16,8 @@ export interface MetricDef<T> {
   unit: string;
   format: (value: number) => string;
   value: (day: T) => number;
+  /** Comptage (véhicules, commandes) : légende à bornes entières. */
+  integer: boolean;
 }
 
 const count = (v: number) => formatVehicles(v);
@@ -26,18 +28,21 @@ export const PLANNED_METRICS = {
     unit: "Heures-véhicule d'immobilisation",
     format: formatHours,
     value: (d) => d.vehicleHours,
+    integer: false,
   },
   affected: {
     label: "Véhicules concernés",
     unit: "Véhicules immobilisés au moins une fois",
     format: count,
     value: (d) => d.affected,
+    integer: true,
   },
   peak: {
     label: "Pic simultané",
     unit: "Véhicules immobilisés en même temps (max.)",
     format: count,
     value: (d) => d.peak,
+    integer: true,
   },
 } satisfies Record<string, MetricDef<DayForecast>>;
 
@@ -47,18 +52,21 @@ export const REAL_METRICS = {
     unit: "Coupures confirmées par le boîtier",
     format: count,
     value: (d) => d.cut.acknowledged,
+    integer: true,
   },
   refusals: {
     label: "Refus",
     unit: "Tentatives refusées avant émission",
     format: count,
     value: (d) => d.refusals,
+    integer: true,
   },
   failures: {
     label: "Échecs",
     unit: "Commandes échouées ou expirées",
     format: count,
     value: (d) => d.cut.failed + d.cut.expired + d.restore.failed + d.restore.expired,
+    integer: true,
   },
 } satisfies Record<string, MetricDef<ScheduleHistoryDay>>;
 

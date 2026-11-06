@@ -1,7 +1,7 @@
 import { cn } from "cn";
 
 import { formatDayShort, formatWeekdayShort } from "./format";
-import { HeatLegend, heatClass, heatLevel } from "./heat-scale";
+import { HeatLegend, heatClass, heatScale } from "./heat-scale";
 
 const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
 
@@ -14,6 +14,7 @@ export function WeekHeatmap({
   days,
   unit,
   format,
+  integer = false,
   selected,
   onSelect,
 }: {
@@ -22,12 +23,14 @@ export function WeekHeatmap({
   /** « Véhicules immobilisés (moyenne sur l'heure) », « Commandes émises »… */
   unit: string;
   format: (value: number) => string;
+  /** Comptage : légende à bornes entières. */
+  integer?: boolean;
   selected: string;
   onSelect: (date: string) => void;
 }) {
   // Les jours de changement d'heure ont 23 ou 25 heures : on aligne sur 24 colonnes.
   const grid = days.map((d) => HOURS.map((_, h) => d.hours[h] ?? 0));
-  const max = Math.max(0, ...grid.flat());
+  const scale = heatScale(Math.max(0, ...grid.flat()), integer);
 
   return (
     <div className="flex flex-col gap-3">
@@ -71,7 +74,7 @@ export function WeekHeatmap({
                     <td
                       key={label}
                       title={`${label}h : ${format(value)} — ${unit.toLowerCase()}`}
-                      className={cn("h-7 min-w-5 rounded-sm text-center", heatClass(heatLevel(value, max)))}
+                      className={cn("h-7 min-w-5 rounded-sm text-center", heatClass(scale.level(value)))}
                     >
                       {value > 0 ? (
                         format(value)
@@ -89,7 +92,7 @@ export function WeekHeatmap({
           </tbody>
         </table>
       </div>
-      <HeatLegend max={max} format={format} unit={unit} />
+      <HeatLegend scale={scale} format={format} unit={unit} />
     </div>
   );
 }

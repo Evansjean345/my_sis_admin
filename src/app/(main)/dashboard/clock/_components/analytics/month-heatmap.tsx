@@ -5,7 +5,7 @@ import { type KeyboardEvent, useRef } from "react";
 import { cn } from "cn";
 
 import { formatDayLong } from "./format";
-import { HeatLegend, heatClass, heatLevel } from "./heat-scale";
+import { HeatLegend, heatClass, heatScale } from "./heat-scale";
 import type { DayCell } from "./metrics";
 
 const WEEK_HEADERS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
@@ -29,14 +29,14 @@ export function MonthHeatmap({
   days: DayCell[];
   /** « 2026-11 » : les jours hors du mois sont estompés. */
   month: string;
-  meta: { unit: string; format: (value: number) => string };
+  meta: { unit: string; format: (value: number) => string; integer: boolean };
   selected: string;
   today: string;
   onSelect: (date: string) => void;
 }) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const inMonth = days.filter((d) => d.date.startsWith(month));
-  const max = Math.max(0, ...inMonth.map((d) => d.value));
+  const scale = heatScale(Math.max(0, ...inMonth.map((d) => d.value)), meta.integer);
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     const moves: Record<string, number> = {
@@ -92,10 +92,10 @@ export function MonthHeatmap({
                       onKeyDown={(e) => onKeyDown(e, index)}
                       aria-label={`${formatDayLong(d.date)}${isToday ? " (aujourd'hui)" : ""}${outside ? " (hors du mois)" : ""} : ${meta.format(value)} — ${meta.unit.toLowerCase()}`}
                       className={cn(
-                        "flex h-14 w-full cursor-pointer flex-col justify-between rounded-md p-1.5 text-left transition-shadow duration-150 sm:h-20 sm:p-2",
+                        "flex h-14 w-full cursor-pointer touch-manipulation flex-col justify-between rounded-md p-1.5 text-left transition-[box-shadow,filter] duration-150 hover:ring-1 hover:ring-foreground/40 active:brightness-95 motion-reduce:transition-none sm:h-20 sm:p-2",
                         "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
                         // Hors du mois : fond neutre plutôt qu'une opacité, pour garder le contraste du texte.
-                        outside ? cn(heatClass(0), "border border-dashed") : heatClass(heatLevel(value, max)),
+                        outside ? cn(heatClass(0), "border border-dashed") : heatClass(scale.level(value)),
                         isSelected && "ring-2 ring-foreground ring-offset-1 ring-offset-card",
                       )}
                     >
@@ -118,7 +118,7 @@ export function MonthHeatmap({
           ))}
         </tbody>
       </table>
-      <HeatLegend max={max} format={meta.format} unit={meta.unit} />
+      <HeatLegend scale={scale} format={meta.format} unit={meta.unit} />
     </div>
   );
 }

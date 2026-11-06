@@ -1,0 +1,441 @@
+From 1a245a96fdab79bb69da441296a54dfc3d931824 Mon Sep 17 00:00:00 2001
+From: Evans KATCHI <developerhyksos@gmail.com>
+Date: Fri, 6 Nov 2026 11:16:20 +0000
+Subject: [PATCH] =?UTF-8?q?fix(horaires):=20calendriers=20sans=20=C3=A9car?=
+ =?UTF-8?q?t=20SSR,=20l=C3=A9gendes=20exactes=20et=20accessibilit=C3=A9?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Rendu SSR / hydratation
+- Calendrier & analyses : rien de ce qui dépend de l'horloge ou du
+  formatage Intl (mois courant, « aujourd'hui », heure en cours) n'est rendu
+  avant la fin de l'hydratation (useHydrated) — serveur et navigateur ne lisent
+  pas l'heure au même instant et n'ont pas toujours les mêmes données Intl.
+
+UX / UI (checklist du skill UI/UX Pro Max)
+- Légendes des cartes de chaleur : une seule échelle (heatScale) pour les
+  cases et la légende ; bornes entières pour les comptages (« ≤ 2 », jamais
+  « ≤ 0,6 coupure »).
+- Mouvements réduits : animation d'actualisation et transitions coupées.
+- Cases du calendrier : retour au survol et à l'appui sans décalage de mise en
+  page, touch-action: manipulation.
+- Réel : message explicite et retour au prévu si le back-end n'a pas encore
+  l'endpoint d'analyse (404, migration 020 non déployée).
+- Onglets des écrans de calendrier : contraste du libellé inactif porté de
+  ~2:1 à 6,8:1 (le jeton --muted du thème clair est un bleu saturé).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Ty9GokAqr9uDHR9XZMBFjM
+---
+ .../groups/group-detail-screen.tsx            |  4 +-
+ .../[id]/_components/schedule-detail.tsx      |  4 +-
+ .../_components/analytics/heat-scale.tsx      | 61 +++++++++++++------
+ .../clock/_components/analytics/metrics.ts    |  8 +++
+ .../_components/analytics/month-heatmap.tsx   | 12 ++--
+ .../analytics/schedule-analytics.tsx          | 50 ++++++++++++++-
+ .../_components/analytics/week-heatmap.tsx    | 11 ++--
+ .../dashboard/clock/_components/schedules.tsx |  4 +-
+ 8 files changed, 123 insertions(+), 31 deletions(-)
+
+diff --git a/src/app/(main)/dashboard/_components/groups/group-detail-screen.tsx b/src/app/(main)/dashboard/_components/groups/group-detail-screen.tsx
+index 8db205b..cf60861 100644
+--- a/src/app/(main)/dashboard/_components/groups/group-detail-screen.tsx
++++ b/src/app/(main)/dashboard/_components/groups/group-detail-screen.tsx
+@@ -92,7 +92,9 @@ export function GroupDetailScreen({ family, id }: { family: GroupFamily; id: str
+       </div>
+ 
+       <Tabs defaultValue="members">
+-        <TabsList>
++        {/* Piste neutre : le jeton --muted du thème clair (#286ea8) ne laisse qu'un contraste
++            d'environ 2:1 au libellé des onglets inactifs (4,5:1 requis) ; libellé remonté à 80 %. */}
++        <TabsList className="bg-muted-foreground/10 *:data-[slot=tabs-trigger]:text-foreground/80">
+           <TabsTrigger value="members">Composition</TabsTrigger>
+           {isFleet ? <TabsTrigger value="schedules">Horaires</TabsTrigger> : null}
+           <TabsTrigger value="audit">Journal</TabsTrigger>
+diff --git a/src/app/(main)/dashboard/clock/[id]/_components/schedule-detail.tsx b/src/app/(main)/dashboard/clock/[id]/_components/schedule-detail.tsx
+index e0f77de..ee56677 100644
+--- a/src/app/(main)/dashboard/clock/[id]/_components/schedule-detail.tsx
++++ b/src/app/(main)/dashboard/clock/[id]/_components/schedule-detail.tsx
+@@ -103,7 +103,9 @@ export function ScheduleDetail({ id }: { id: string }) {
+       </Card>
+ 
+       <Tabs defaultValue="windows">
+-        <TabsList>
++        {/* Piste neutre : le jeton --muted du thème clair (#286ea8) ne laisse qu'un contraste
++            d'environ 2:1 au libellé des onglets inactifs (4,5:1 requis) ; libellé remonté à 80 %. */}
++        <TabsList className="bg-muted-foreground/10 *:data-[slot=tabs-trigger]:text-foreground/80">
+           <TabsTrigger value="windows">Plages</TabsTrigger>
+           <TabsTrigger value="vehicles">Véhicules ({s.vehicles.length})</TabsTrigger>
+           <TabsTrigger value="groups">Flottes ({s.vehicleGroups.length})</TabsTrigger>
+diff --git a/src/app/(main)/dashboard/clock/_components/analytics/heat-scale.tsx b/src/app/(main)/dashboard/clock/_components/analytics/heat-scale.tsx
+index 404c7f3..df4274e 100644
+--- a/src/app/(main)/dashboard/clock/_components/analytics/heat-scale.tsx
++++ b/src/app/(main)/dashboard/clock/_components/analytics/heat-scale.tsx
+@@ -19,32 +19,59 @@ const STEPS = [
+ 
+ export const HEAT_LEVELS = STEPS.length - 1;
+ 
+-/** Clés stables des paliers : les bornes se confondent quand la vue est toute à zéro. */
+-const LEVEL_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
++export function heatClass(level: number): string {
++  return STEPS[Math.max(0, Math.min(HEAT_LEVELS, level))];
++}
+ 
+-/** Palier 0 (rien) à 5 (maximum de la vue). */
+-export function heatLevel(value: number, max: number): number {
+-  if (value <= 0 || max <= 0) return 0;
+-  return Math.min(HEAT_LEVELS, Math.max(1, Math.ceil((value / max) * HEAT_LEVELS)));
++/**
++ * Bornes hautes des 5 paliers et palier d'une valeur — UNE seule source pour
++ * la couleur des cases et la légende, qui ne peuvent donc pas se contredire.
++ *
++ * `integer` : pour des comptages (coupures, véhicules), les bornes sont
++ * entières (« ≤ 2 », jamais « ≤ 0,6 coupure »). Quand le maximum est petit,
++ * plusieurs paliers partagent une borne : on retient le DERNIER palier qui la
++ * porte (le maximum reste le plus foncé), et la légende n'affiche que les
++ * bornes distinctes.
++ */
++export interface HeatScale {
++  max: number;
++  bounds: number[];
++  level: (value: number) => number;
+ }
+ 
+-export function heatClass(level: number): string {
+-  return STEPS[Math.max(0, Math.min(HEAT_LEVELS, level))];
++export function heatScale(max: number, integer = false): HeatScale {
++  const bounds = Array.from({ length: HEAT_LEVELS }, (_, i) => {
++    const b = (max * (i + 1)) / HEAT_LEVELS;
++    return integer ? Math.ceil(b) : b;
++  });
++  return {
++    max,
++    bounds,
++    level: (value) => {
++      if (value <= 0 || max <= 0) return 0;
++      const i = bounds.findIndex((b) => value <= b + 1e-9);
++      if (i === -1) return HEAT_LEVELS;
++      return bounds.lastIndexOf(bounds[i]) + 1;
++    },
++  };
+ }
+ 
+-/** Légende chiffrée : bornes de chaque palier dans l'unité de la vue. */
++/** Légende chiffrée : bornes distinctes des paliers, dans l'unité de la vue. */
+ export function HeatLegend({
+-  max,
++  scale,
+   format,
+   unit,
+   className,
+ }: {
+-  max: number;
++  scale: HeatScale;
+   format: (value: number) => string;
+   unit: string;
+   className?: string;
+ }) {
+-  const bounds = LEVEL_KEYS.map((key, i) => ({ key, value: (max * (i + 1)) / HEAT_LEVELS }));
++  const items = scale.bounds
++    .map((bound, i) => ({ level: i + 1, bound }))
++    .filter((it, i, all) => all[i + 1]?.bound !== it.bound);
++
+   return (
+     <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs", className)}>
+       <span>{unit}</span>
+@@ -53,11 +80,11 @@ export function HeatLegend({
+           <span aria-hidden="true" className={cn("size-3 rounded-sm border", heatClass(0))} />
+           <span className="tabular-nums">0</span>
+         </li>
+-        {max > 0
+-          ? bounds.map((b, i) => (
+-              <li key={b.key} className="flex items-center gap-1">
+-                <span aria-hidden="true" className={cn("size-3 rounded-sm", heatClass(i + 1))} />
+-                <span className="tabular-nums">≤ {format(b.value)}</span>
++        {scale.max > 0
++          ? items.map((it) => (
++              <li key={`palier-${it.level}`} className="flex items-center gap-1">
++                <span aria-hidden="true" className={cn("size-3 rounded-sm", heatClass(it.level))} />
++                <span className="tabular-nums">≤ {format(it.bound)}</span>
+               </li>
+             ))
+           : null}
+diff --git a/src/app/(main)/dashboard/clock/_components/analytics/metrics.ts b/src/app/(main)/dashboard/clock/_components/analytics/metrics.ts
+index 8051dc6..dc541b4 100644
+--- a/src/app/(main)/dashboard/clock/_components/analytics/metrics.ts
++++ b/src/app/(main)/dashboard/clock/_components/analytics/metrics.ts
+@@ -16,6 +16,8 @@ export interface MetricDef<T> {
+   unit: string;
+   format: (value: number) => string;
+   value: (day: T) => number;
++  /** Comptage (véhicules, commandes) : légende à bornes entières. */
++  integer: boolean;
+ }
+ 
+ const count = (v: number) => formatVehicles(v);
+@@ -26,18 +28,21 @@ export const PLANNED_METRICS = {
+     unit: "Heures-véhicule d'immobilisation",
+     format: formatHours,
+     value: (d) => d.vehicleHours,
++    integer: false,
+   },
+   affected: {
+     label: "Véhicules concernés",
+     unit: "Véhicules immobilisés au moins une fois",
+     format: count,
+     value: (d) => d.affected,
++    integer: true,
+   },
+   peak: {
+     label: "Pic simultané",
+     unit: "Véhicules immobilisés en même temps (max.)",
+     format: count,
+     value: (d) => d.peak,
++    integer: true,
+   },
+ } satisfies Record<string, MetricDef<DayForecast>>;
+ 
+@@ -47,18 +52,21 @@ export const REAL_METRICS = {
+     unit: "Coupures confirmées par le boîtier",
+     format: count,
+     value: (d) => d.cut.acknowledged,
++    integer: true,
+   },
+   refusals: {
+     label: "Refus",
+     unit: "Tentatives refusées avant émission",
+     format: count,
+     value: (d) => d.refusals,
++    integer: true,
+   },
+   failures: {
+     label: "Échecs",
+     unit: "Commandes échouées ou expirées",
+     format: count,
+     value: (d) => d.cut.failed + d.cut.expired + d.restore.failed + d.restore.expired,
++    integer: true,
+   },
+ } satisfies Record<string, MetricDef<ScheduleHistoryDay>>;
+ 
+diff --git a/src/app/(main)/dashboard/clock/_components/analytics/month-heatmap.tsx b/src/app/(main)/dashboard/clock/_components/analytics/month-heatmap.tsx
+index 6053c6e..8512a3c 100644
+--- a/src/app/(main)/dashboard/clock/_components/analytics/month-heatmap.tsx
++++ b/src/app/(main)/dashboard/clock/_components/analytics/month-heatmap.tsx
+@@ -5,7 +5,7 @@ import { type KeyboardEvent, useRef } from "react";
+ import { cn } from "cn";
+ 
+ import { formatDayLong } from "./format";
+-import { HeatLegend, heatClass, heatLevel } from "./heat-scale";
++import { HeatLegend, heatClass, heatScale } from "./heat-scale";
+ import type { DayCell } from "./metrics";
+ 
+ const WEEK_HEADERS = ["Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim."];
+@@ -29,14 +29,14 @@ export function MonthHeatmap({
+   days: DayCell[];
+   /** « 2026-11 » : les jours hors du mois sont estompés. */
+   month: string;
+-  meta: { unit: string; format: (value: number) => string };
++  meta: { unit: string; format: (value: number) => string; integer: boolean };
+   selected: string;
+   today: string;
+   onSelect: (date: string) => void;
+ }) {
+   const refs = useRef<Array<HTMLButtonElement | null>>([]);
+   const inMonth = days.filter((d) => d.date.startsWith(month));
+-  const max = Math.max(0, ...inMonth.map((d) => d.value));
++  const scale = heatScale(Math.max(0, ...inMonth.map((d) => d.value)), meta.integer);
+ 
+   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+     const moves: Record<string, number> = {
+@@ -92,10 +92,10 @@ export function MonthHeatmap({
+                       onKeyDown={(e) => onKeyDown(e, index)}
+                       aria-label={`${formatDayLong(d.date)}${isToday ? " (aujourd'hui)" : ""}${outside ? " (hors du mois)" : ""} : ${meta.format(value)} — ${meta.unit.toLowerCase()}`}
+                       className={cn(
+-                        "flex h-14 w-full cursor-pointer flex-col justify-between rounded-md p-1.5 text-left transition-shadow duration-150 sm:h-20 sm:p-2",
++                        "flex h-14 w-full cursor-pointer touch-manipulation flex-col justify-between rounded-md p-1.5 text-left transition-[box-shadow,filter] duration-150 hover:ring-1 hover:ring-foreground/40 active:brightness-95 motion-reduce:transition-none sm:h-20 sm:p-2",
+                         "outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                         // Hors du mois : fond neutre plutôt qu'une opacité, pour garder le contraste du texte.
+-                        outside ? cn(heatClass(0), "border border-dashed") : heatClass(heatLevel(value, max)),
++                        outside ? cn(heatClass(0), "border border-dashed") : heatClass(scale.level(value)),
+                         isSelected && "ring-2 ring-foreground ring-offset-1 ring-offset-card",
+                       )}
+                     >
+@@ -118,7 +118,7 @@ export function MonthHeatmap({
+           ))}
+         </tbody>
+       </table>
+-      <HeatLegend max={max} format={meta.format} unit={meta.unit} />
++      <HeatLegend scale={scale} format={meta.format} unit={meta.unit} />
+     </div>
+   );
+ }
+diff --git a/src/app/(main)/dashboard/clock/_components/analytics/schedule-analytics.tsx b/src/app/(main)/dashboard/clock/_components/analytics/schedule-analytics.tsx
+index 051549d..db7b81c 100644
+--- a/src/app/(main)/dashboard/clock/_components/analytics/schedule-analytics.tsx
++++ b/src/app/(main)/dashboard/clock/_components/analytics/schedule-analytics.tsx
+@@ -29,6 +29,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+ import { useScheduleAnalyticsData } from "@/hooks/api/use-schedule-analytics";
+ import { useScheduleHistory } from "@/hooks/api/use-schedules";
++import { useHydrated } from "@/hooks/use-hydrated";
++import { ApiError } from "@/types/api";
+ 
+ import { AnalyticsInsights } from "./analytics-insights";
+ import { DayDetail } from "./day-detail";
+@@ -101,6 +103,13 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
+   const [realMetric, setRealMetric] = useState<RealMetric>("confirmedCuts");
+   const source: Source = searchParams.get("source") === "reel" ? "reel" : "prevu";
+   const now = useNow();
++  /**
++   * La barre d'outils affiche le mois courant (horloge + formatage Intl) :
++   * serveur et navigateur ne lisent pas l'heure au même instant, et Node et le
++   * navigateur n'ont pas toujours les mêmes données Intl. Rien de tout cela
++   * n'est rendu avant la fin de l'hydratation → aucun écart SSR possible.
++   */
++  const hydrated = useHydrated();
+ 
+   const analytics = useScheduleAnalyticsData(organizationId);
+   const model = useMemo(() => (analytics.data ? buildModel(analytics.data) : null), [analytics.data]);
+@@ -232,7 +241,9 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
+         >
+           <RefreshCw
+             className={
+-              analytics.isFetching || historyMonth.isFetching || historyGrid.isFetching ? "animate-spin" : undefined
++              analytics.isFetching || historyMonth.isFetching || historyGrid.isFetching
++                ? "animate-spin motion-reduce:animate-none"
++                : undefined
+             }
+           />
+         </Button>
+@@ -240,6 +251,23 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
+     </div>
+   );
+ 
++  if (!hydrated) {
++    return (
++      <div className="flex flex-col gap-4" aria-busy="true">
++        <Skeleton className="h-9 w-full max-w-xl rounded-md" />
++        <div className={metricGridClass}>
++          {Array.from({ length: 4 }, (_, i) => (
++            <Skeleton key={String(i)} className="h-36 rounded-xl" />
++          ))}
++        </div>
++        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
++          <Skeleton className="h-[34rem] rounded-xl" />
++          <Skeleton className="h-[34rem] rounded-xl" />
++        </div>
++      </div>
++    );
++  }
++
+   if (analytics.isError) {
+     return (
+       <div className="flex flex-col gap-4">
+@@ -293,6 +321,25 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
+ 
+   if (isReal) {
+     if (historyMonth.isError || historyGrid.isError) {
++      const failure = historyMonth.error ?? historyGrid.error;
++      // 404 : le back-end n'a pas encore l'endpoint d'analyse (migration 020 non déployée).
++      if (failure instanceof ApiError && failure.status === 404) {
++        return (
++          <div className="flex flex-col gap-4">
++            {toolbar}
++            <EmptyState
++              icon={<Info />}
++              title="Historique réel indisponible sur ce serveur"
++              description="Le back-end ne propose pas encore GET /admin/usage-schedules/analytics. Déployez la mise à jour du back-end (migration 020) pour afficher l'historique ; la vue « Prévu » reste disponible."
++              action={
++                <Button variant="outline" onClick={() => setParams({ source: null })}>
++                  Revenir au prévu
++                </Button>
++              }
++            />
++          </div>
++        );
++      }
+       return (
+         <div className="flex flex-col gap-4">
+           {toolbar}
+@@ -405,6 +452,7 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
+             <WeekHeatmap
+               days={realWeek}
+               unit="Commandes émises par le moteur"
++              integer
+               format={formatVehicles}
+               selected={day.date}
+               onSelect={selectDay}
+diff --git a/src/app/(main)/dashboard/clock/_components/analytics/week-heatmap.tsx b/src/app/(main)/dashboard/clock/_components/analytics/week-heatmap.tsx
+index 18ef1e3..9bf1f6a 100644
+--- a/src/app/(main)/dashboard/clock/_components/analytics/week-heatmap.tsx
++++ b/src/app/(main)/dashboard/clock/_components/analytics/week-heatmap.tsx
+@@ -1,7 +1,7 @@
+ import { cn } from "cn";
+ 
+ import { formatDayShort, formatWeekdayShort } from "./format";
+-import { HeatLegend, heatClass, heatLevel } from "./heat-scale";
++import { HeatLegend, heatClass, heatScale } from "./heat-scale";
+ 
+ const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+ 
+@@ -14,6 +14,7 @@ export function WeekHeatmap({
+   days,
+   unit,
+   format,
++  integer = false,
+   selected,
+   onSelect,
+ }: {
+@@ -22,12 +23,14 @@ export function WeekHeatmap({
+   /** « Véhicules immobilisés (moyenne sur l'heure) », « Commandes émises »… */
+   unit: string;
+   format: (value: number) => string;
++  /** Comptage : légende à bornes entières. */
++  integer?: boolean;
+   selected: string;
+   onSelect: (date: string) => void;
+ }) {
+   // Les jours de changement d'heure ont 23 ou 25 heures : on aligne sur 24 colonnes.
+   const grid = days.map((d) => HOURS.map((_, h) => d.hours[h] ?? 0));
+-  const max = Math.max(0, ...grid.flat());
++  const scale = heatScale(Math.max(0, ...grid.flat()), integer);
+ 
+   return (
+     <div className="flex flex-col gap-3">
+@@ -71,7 +74,7 @@ export function WeekHeatmap({
+                     <td
+                       key={label}
+                       title={`${label}h : ${format(value)} — ${unit.toLowerCase()}`}
+-                      className={cn("h-7 min-w-5 rounded-sm text-center", heatClass(heatLevel(value, max)))}
++                      className={cn("h-7 min-w-5 rounded-sm text-center", heatClass(scale.level(value)))}
+                     >
+                       {value > 0 ? (
+                         format(value)
+@@ -89,7 +92,7 @@ export function WeekHeatmap({
+           </tbody>
+         </table>
+       </div>
+-      <HeatLegend max={max} format={format} unit={unit} />
++      <HeatLegend scale={scale} format={format} unit={unit} />
+     </div>
+   );
+ }
+diff --git a/src/app/(main)/dashboard/clock/_components/schedules.tsx b/src/app/(main)/dashboard/clock/_components/schedules.tsx
+index 090afdb..3ccfd45 100644
+--- a/src/app/(main)/dashboard/clock/_components/schedules.tsx
++++ b/src/app/(main)/dashboard/clock/_components/schedules.tsx
+@@ -97,7 +97,9 @@ export function Schedules() {
+           router.replace(value === "analyses" ? `${pathname}?vue=analyses` : pathname, { scroll: false })
+         }
+       >
+-        <TabsList>
++        {/* Piste neutre : le jeton --muted du thème clair (#286ea8) ne laisse qu'un contraste
++            d'environ 2:1 au libellé des onglets inactifs (4,5:1 requis) ; libellé remonté à 80 %. */}
++        <TabsList className="bg-muted-foreground/10 *:data-[slot=tabs-trigger]:text-foreground/80">
+           <TabsTrigger value="calendriers">
+             <List data-icon="inline-start" />
+             Calendriers
+-- 
+2.43.0
+

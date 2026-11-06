@@ -29,6 +29,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useScheduleAnalyticsData } from "@/hooks/api/use-schedule-analytics";
 import { useScheduleHistory } from "@/hooks/api/use-schedules";
+import { useHydrated } from "@/hooks/use-hydrated";
+import { ApiError } from "@/types/api";
 
 import { AnalyticsInsights } from "./analytics-insights";
 import { DayDetail } from "./day-detail";
@@ -101,6 +103,13 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
   const [realMetric, setRealMetric] = useState<RealMetric>("confirmedCuts");
   const source: Source = searchParams.get("source") === "reel" ? "reel" : "prevu";
   const now = useNow();
+  /**
+   * La barre d'outils affiche le mois courant (horloge + formatage Intl) :
+   * serveur et navigateur ne lisent pas l'heure au même instant, et Node et le
+   * navigateur n'ont pas toujours les mêmes données Intl. Rien de tout cela
+   * n'est rendu avant la fin de l'hydratation → aucun écart SSR possible.
+   */
+  const hydrated = useHydrated();
 
   const analytics = useScheduleAnalyticsData(organizationId);
   const model = useMemo(() => (analytics.data ? buildModel(analytics.data) : null), [analytics.data]);
@@ -232,13 +241,32 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
         >
           <RefreshCw
             className={
-              analytics.isFetching || historyMonth.isFetching || historyGrid.isFetching ? "animate-spin" : undefined
+              analytics.isFetching || historyMonth.isFetching || historyGrid.isFetching
+                ? "animate-spin motion-reduce:animate-none"
+                : undefined
             }
           />
         </Button>
       </div>
     </div>
   );
+
+  if (!hydrated) {
+    return (
+      <div className="flex flex-col gap-4" aria-busy="true">
+        <Skeleton className="h-9 w-full max-w-xl rounded-md" />
+        <div className={metricGridClass}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={String(i)} className="h-36 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
+          <Skeleton className="h-[34rem] rounded-xl" />
+          <Skeleton className="h-[34rem] rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (analytics.isError) {
     return (
@@ -293,6 +321,25 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
 
   if (isReal) {
     if (historyMonth.isError || historyGrid.isError) {
+      const failure = historyMonth.error ?? historyGrid.error;
+      // 404 : le back-end n'a pas encore l'endpoint d'analyse (migration 020 non déployée).
+      if (failure instanceof ApiError && failure.status === 404) {
+        return (
+          <div className="flex flex-col gap-4">
+            {toolbar}
+            <EmptyState
+              icon={<Info />}
+              title="Historique réel indisponible sur ce serveur"
+              description="Le back-end ne propose pas encore GET /admin/usage-schedules/analytics. Déployez la mise à jour du back-end (migration 020) pour afficher l'historique ; la vue « Prévu » reste disponible."
+              action={
+                <Button variant="outline" onClick={() => setParams({ source: null })}>
+                  Revenir au prévu
+                </Button>
+              }
+            />
+          </div>
+        );
+      }
       return (
         <div className="flex flex-col gap-4">
           {toolbar}
@@ -405,6 +452,7 @@ export function ScheduleAnalytics({ onCreate }: { onCreate: () => void }) {
             <WeekHeatmap
               days={realWeek}
               unit="Commandes émises par le moteur"
+              integer
               format={formatVehicles}
               selected={day.date}
               onSelect={selectDay}

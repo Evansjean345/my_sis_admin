@@ -103,7 +103,9 @@ export function ScheduleDetail({ id }: { id: string }) {
       </Card>
 
       <Tabs defaultValue="windows">
-        <TabsList>
+        {/* Piste neutre : le jeton --muted du thème clair (#286ea8) ne laisse qu'un contraste
+            d'environ 2:1 au libellé des onglets inactifs (4,5:1 requis) ; libellé remonté à 80 %. */}
+        <TabsList className="bg-muted-foreground/10 *:data-[slot=tabs-trigger]:text-foreground/80">
           <TabsTrigger value="windows">Plages</TabsTrigger>
           <TabsTrigger value="vehicles">Véhicules ({s.vehicles.length})</TabsTrigger>
           <TabsTrigger value="groups">Flottes ({s.vehicleGroups.length})</TabsTrigger>

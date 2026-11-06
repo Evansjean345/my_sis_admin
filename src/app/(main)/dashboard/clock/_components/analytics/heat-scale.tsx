@@ -19,32 +19,59 @@ const STEPS = [
 
 export const HEAT_LEVELS = STEPS.length - 1;
 
-/** Clés stables des paliers : les bornes se confondent quand la vue est toute à zéro. */
-const LEVEL_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
-
-/** Palier 0 (rien) à 5 (maximum de la vue). */
-export function heatLevel(value: number, max: number): number {
-  if (value <= 0 || max <= 0) return 0;
-  return Math.min(HEAT_LEVELS, Math.max(1, Math.ceil((value / max) * HEAT_LEVELS)));
-}
-
 export function heatClass(level: number): string {
   return STEPS[Math.max(0, Math.min(HEAT_LEVELS, level))];
 }
 
-/** Légende chiffrée : bornes de chaque palier dans l'unité de la vue. */
+/**
+ * Bornes hautes des 5 paliers et palier d'une valeur — UNE seule source pour
+ * la couleur des cases et la légende, qui ne peuvent donc pas se contredire.
+ *
+ * `integer` : pour des comptages (coupures, véhicules), les bornes sont
+ * entières (« ≤ 2 », jamais « ≤ 0,6 coupure »). Quand le maximum est petit,
+ * plusieurs paliers partagent une borne : on retient le DERNIER palier qui la
+ * porte (le maximum reste le plus foncé), et la légende n'affiche que les
+ * bornes distinctes.
+ */
+export interface HeatScale {
+  max: number;
+  bounds: number[];
+  level: (value: number) => number;
+}
+
+export function heatScale(max: number, integer = false): HeatScale {
+  const bounds = Array.from({ length: HEAT_LEVELS }, (_, i) => {
+    const b = (max * (i + 1)) / HEAT_LEVELS;
+    return integer ? Math.ceil(b) : b;
+  });
+  return {
+    max,
+    bounds,
+    level: (value) => {
+      if (value <= 0 || max <= 0) return 0;
+      const i = bounds.findIndex((b) => value <= b + 1e-9);
+      if (i === -1) return HEAT_LEVELS;
+      return bounds.lastIndexOf(bounds[i]) + 1;
+    },
+  };
+}
+
+/** Légende chiffrée : bornes distinctes des paliers, dans l'unité de la vue. */
 export function HeatLegend({
-  max,
+  scale,
   format,
   unit,
   className,
 }: {
-  max: number;
+  scale: HeatScale;
   format: (value: number) => string;
   unit: string;
   className?: string;
 }) {
-  const bounds = LEVEL_KEYS.map((key, i) => ({ key, value: (max * (i + 1)) / HEAT_LEVELS }));
+  const items = scale.bounds
+    .map((bound, i) => ({ level: i + 1, bound }))
+    .filter((it, i, all) => all[i + 1]?.bound !== it.bound);
+
   return (
     <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs", className)}>
       <span>{unit}</span>
@@ -53,11 +80,11 @@ export function HeatLegend({
           <span aria-hidden="true" className={cn("size-3 rounded-sm border", heatClass(0))} />
           <span className="tabular-nums">0</span>
         </li>
-        {max > 0
-          ? bounds.map((b, i) => (
-              <li key={b.key} className="flex items-center gap-1">
-                <span aria-hidden="true" className={cn("size-3 rounded-sm", heatClass(i + 1))} />
-                <span className="tabular-nums">≤ {format(b.value)}</span>
+        {scale.max > 0
+          ? items.map((it) => (
+              <li key={`palier-${it.level}`} className="flex items-center gap-1">
+                <span aria-hidden="true" className={cn("size-3 rounded-sm", heatClass(it.level))} />
+                <span className="tabular-nums">≤ {format(it.bound)}</span>
               </li>
             ))
           : null}
