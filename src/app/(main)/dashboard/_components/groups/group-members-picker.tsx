@@ -20,6 +20,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { useDevices } from "@/hooks/api/use-devices";
+import { useDrivers } from "@/hooks/api/use-drivers";
 import { useAssignGroupMembers } from "@/hooks/api/use-groups";
 import { useVehicles } from "@/hooks/api/use-vehicles";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -63,26 +64,38 @@ export function GroupMembersPicker({
   const assign = useAssignGroupMembers(family.kind);
 
   const searchParam = debounced.length >= family.memberSearchMinLength ? debounced : undefined;
-  const isVehicles = family.kind === "vehicle_group";
+  const kind = family.kind;
 
-  // Les deux hooks sont appelés à chaque rendu — règle des hooks —, mais seul
+  // Les trois hooks sont appelés à chaque rendu — règle des hooks —, mais seul
   // celui de la famille courante déclenche une requête.
   const vehicles = useVehicles(
     { page: 1, perPage: 100, search: searchParam, organizationId },
-    { enabled: open && isVehicles },
+    { enabled: open && kind === "vehicle_group" },
   );
   const devices = useDevices(
     { page: 1, perPage: 100, search: searchParam, organizationId },
-    { enabled: open && !isVehicles },
+    { enabled: open && kind === "device_group" },
   );
-  const query = isVehicles ? vehicles : devices;
+  const drivers = useDrivers(
+    { page: 1, perPage: 100, search: searchParam, organizationId },
+    { enabled: open && kind === "driver_group" },
+  );
+  const query = kind === "vehicle_group" ? vehicles : kind === "device_group" ? devices : drivers;
 
   const candidates: Candidate[] = useMemo(() => {
-    if (isVehicles) {
+    if (kind === "vehicle_group") {
       return (vehicles.data?.data ?? []).map((vehicle) => ({
         id: vehicle.id,
         label: vehicle.registration,
         hint: [vehicle.label, vehicle.brand, vehicle.model].filter(Boolean).join(" · ") || "—",
+      }));
+    }
+    if (kind === "driver_group") {
+      return (drivers.data?.data ?? []).map((driver) => ({
+        id: driver.id,
+        label: driver.fullName,
+        hint:
+          [driver.employeeCode, driver.licenseNumber, driver.vehicle?.registration].filter(Boolean).join(" · ") || "—",
       }));
     }
     return (devices.data?.data ?? []).map((device) => ({
@@ -90,7 +103,7 @@ export function GroupMembersPicker({
       label: device.imei,
       hint: [device.model, device.simMsisdn].filter(Boolean).join(" · ") || "—",
     }));
-  }, [isVehicles, vehicles.data, devices.data]);
+  }, [kind, vehicles.data, devices.data, drivers.data]);
 
   const members = useMemo(() => new Set(currentMemberIds), [currentMemberIds]);
 

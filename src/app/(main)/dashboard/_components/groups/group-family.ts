@@ -1,13 +1,13 @@
-import { Cpu, type LucideIcon, ServerCog, SquareParking, Truck } from "lucide-react";
+import { Contact, Cpu, type LucideIcon, ServerCog, SquareParking, Truck, UsersRound } from "lucide-react";
 
 import type { GroupKind } from "@/types/group";
 
 /**
  * Vocabulaire d'une famille de groupes.
  *
- * Les deux écrans (flottes de véhicules, lots de boîtiers) partagent leurs
- * composants : ce qui change tient dans cet objet — les mots, la route et
- * les icônes. Ajouter une troisième famille se réduirait à une entrée ici.
+ * Les trois écrans (flottes de véhicules, lots de boîtiers, équipes de
+ * conducteurs) partagent leurs composants : ce qui change tient dans cet
+ * objet — les mots, la route et les icônes.
  */
 export interface GroupFamily {
   kind: GroupKind;
@@ -27,6 +27,8 @@ export interface GroupFamily {
   /** Longueur minimale de recherche acceptée par l'API des membres. */
   memberSearchMinLength: number;
   memberSearchPlaceholder: string;
+  /** Exemple de nom dans le formulaire de création. */
+  namePlaceholder: string;
   icon: LucideIcon;
   memberIcon: LucideIcon;
 }
@@ -44,6 +46,7 @@ export const VEHICLE_GROUP_FAMILY: GroupFamily = {
   memberRoute: "/dashboard/vehicles",
   memberSearchMinLength: 1,
   memberSearchPlaceholder: "Rechercher une immatriculation…",
+  namePlaceholder: "Flotte Abidjan",
   icon: SquareParking,
   memberIcon: Truck,
 };
@@ -62,11 +65,32 @@ export const DEVICE_GROUP_FAMILY: GroupFamily = {
   // L'API des boîtiers refuse une recherche de moins de 3 caractères.
   memberSearchMinLength: 3,
   memberSearchPlaceholder: "Rechercher un IMEI (3 caractères minimum)…",
+  namePlaceholder: "Trackers MV730",
   icon: ServerCog,
   memberIcon: Cpu,
+};
+
+export const DRIVER_GROUP_FAMILY: GroupFamily = {
+  kind: "driver_group",
+  route: "/dashboard/group_driver",
+  title: "Équipes de conducteurs",
+  description:
+    "Regroupez vos conducteurs par équipe, site ou horaire. Un conducteur sans organisation n'entre dans aucune équipe.",
+  singular: "équipe",
+  singularWithArticle: "une équipe",
+  memberSingular: "conducteur",
+  memberPlural: "conducteurs",
+  memberColumnLabel: "Conducteur",
+  memberRoute: "/dashboard/driver",
+  memberSearchMinLength: 1,
+  memberSearchPlaceholder: "Rechercher un nom, un matricule ou un permis…",
+  namePlaceholder: "Équipe de nuit",
+  icon: UsersRound,
+  memberIcon: Contact,
 };
 
 export const groupFamilies: Record<GroupKind, GroupFamily> = {
   vehicle_group: VEHICLE_GROUP_FAMILY,
   device_group: DEVICE_GROUP_FAMILY,
+  driver_group: DRIVER_GROUP_FAMILY,
 };

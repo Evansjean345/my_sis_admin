@@ -12,7 +12,7 @@ import type {
 } from "@/types/group";
 
 /**
- * Groupes de véhicules et groupes de boîtiers.
+ * Groupes de véhicules, de boîtiers et de conducteurs.
  *
  * Le back-end sert les deux familles depuis un socle commun
  * (`GroupControllerBase`) : mêmes routes à un segment près, même corps à une
@@ -23,12 +23,12 @@ import type {
  * `?organizationId=` et la création EXIGE `organizationId`.
  */
 interface GroupEndpoints {
-  /** Segment d'URL : `vehicle-groups` | `device-groups`. */
-  resource: "vehicle-groups" | "device-groups";
-  /** Segment des membres : `vehicles` | `devices`. */
-  members: "vehicles" | "devices";
-  /** Clé du corps d'affectation : `vehicleIds` | `deviceIds`. */
-  payloadKey: "vehicleIds" | "deviceIds";
+  /** Segment d'URL : `vehicle-groups` | `device-groups` | `driver-groups`. */
+  resource: "vehicle-groups" | "device-groups" | "driver-groups";
+  /** Segment des membres : `vehicles` | `devices` | `drivers`. */
+  members: "vehicles" | "devices" | "drivers";
+  /** Clé du corps d'affectation : `vehicleIds` | `deviceIds` | `driverIds`. */
+  payloadKey: "vehicleIds" | "deviceIds" | "driverIds";
 }
 
 function createGroupService({ resource, members, payloadKey }: GroupEndpoints) {
@@ -109,4 +109,11 @@ export const deviceGroupService = createGroupService({
   resource: "device-groups",
   members: "devices",
   payloadKey: "deviceIds",
+});
+
+/** Groupes de conducteurs (migration 018) — même socle côté API. */
+export const driverGroupService = createGroupService({
+  resource: "driver-groups",
+  members: "drivers",
+  payloadKey: "driverIds",
 });

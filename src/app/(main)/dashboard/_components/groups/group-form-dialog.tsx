@@ -161,7 +161,7 @@ export function GroupFormDialog({
                 {...form.register("name")}
                 id="field-group-name"
                 autoComplete="off"
-                placeholder={family.kind === "vehicle_group" ? "Flotte Abidjan" : "Trackers MV730"}
+                placeholder={family.namePlaceholder}
                 aria-invalid={Boolean(form.formState.errors.name)}
               />
               {form.formState.errors.name ? <FieldError errors={[form.formState.errors.name]} /> : null}

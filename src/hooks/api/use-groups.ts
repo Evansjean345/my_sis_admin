@@ -2,16 +2,21 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { deviceGroupService, type GroupService, vehicleGroupService } from "@/services/group.service";
+import {
+  deviceGroupService,
+  driverGroupService,
+  type GroupService,
+  vehicleGroupService,
+} from "@/services/group.service";
 import type { AuditLogListParams } from "@/types/audit";
 import type { CreateGroupPayload, GroupKind, GroupListParams, UpdateGroupPayload } from "@/types/group";
 
 import { queryKeys } from "./query-keys";
 
 /**
- * Groupes de véhicules et de boîtiers.
+ * Groupes de véhicules, de boîtiers et de conducteurs.
  *
- * Les deux familles partagent le même contrat : les hooks prennent le type
+ * Les trois familles partagent le même contrat : les hooks prennent le type
  * de groupe (`kind`) en premier argument et les clés de cache le portent.
  * Des alias nommés (`useVehicleGroups`, `useDeviceGroups`…) sont exposés en
  * fin de fichier pour que les écrans restent lisibles.
@@ -19,16 +24,18 @@ import { queryKeys } from "./query-keys";
 const services: Record<GroupKind, GroupService> = {
   vehicle_group: vehicleGroupService,
   device_group: deviceGroupService,
+  driver_group: driverGroupService,
 };
 
 export function groupServiceOf(kind: GroupKind): GroupService {
   return services[kind];
 }
 
-export function useGroups(kind: GroupKind, params: GroupListParams = {}) {
+export function useGroups(kind: GroupKind, params: GroupListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.groups.list(kind, params),
     queryFn: () => services[kind].list(params),
+    enabled: options.enabled ?? true,
     placeholderData: keepPreviousData,
   });
 }
@@ -92,6 +99,8 @@ export function useAssignGroupMembers(kind: GroupKind) {
     onSuccess: (_result, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all(kind) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.groups.members(kind, id) });
+      if (kind === "driver_group") void queryClient.invalidateQueries({ queryKey: queryKeys.drivers.all });
+      if (kind === "vehicle_group") void queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
     },
   });
 }
@@ -103,6 +112,8 @@ export function useUnassignGroupMember(kind: GroupKind) {
     onSuccess: (_result, { id }) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.groups.all(kind) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.groups.members(kind, id) });
+      if (kind === "driver_group") void queryClient.invalidateQueries({ queryKey: queryKeys.drivers.all });
+      if (kind === "vehicle_group") void queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
     },
   });
 }
@@ -111,7 +122,11 @@ export function useUnassignGroupMember(kind: GroupKind) {
 // Alias nommés — même implémentation, lecture plus directe dans les écrans.
 // ---------------------------------------------------------------------------
 
-export const useVehicleGroups = (params: GroupListParams = {}) => useGroups("vehicle_group", params);
+export const useVehicleGroups = (params: GroupListParams = {}, options: { enabled?: boolean } = {}) =>
+  useGroups("vehicle_group", params, options);
 export const useVehicleGroup = (id: string | undefined) => useGroup("vehicle_group", id);
 export const useDeviceGroups = (params: GroupListParams = {}) => useGroups("device_group", params);
 export const useDeviceGroup = (id: string | undefined) => useGroup("device_group", id);
+export const useDriverGroups = (params: GroupListParams = {}, options: { enabled?: boolean } = {}) =>
+  useGroups("driver_group", params, options);
+export const useDriverGroup = (id: string | undefined) => useGroup("driver_group", id);

@@ -72,6 +72,27 @@ export interface SecurityCommandAccepted {
   providerCommandId: string | null;
 }
 
+/** Résultat d'une commande de GROUPE : un sort par véhicule (CM-07 appliqué à chacun). */
+export interface GroupCommandResultEntry {
+  vehicleId: string;
+  registration: string;
+  ok: boolean;
+  commandId?: string;
+  commandType?: "engine_cut" | "engine_restore";
+  status?: CommandStatus;
+  error?: { code: string; message: string; details?: Record<string, unknown> };
+}
+
+/** POST /security/vehicle-groups/:id/(immobilizations|restorations) */
+export interface GroupCommandResult {
+  vehicleGroupId: string;
+  action: "cut" | "restore";
+  total: number;
+  succeeded: number;
+  failed: number;
+  results: GroupCommandResultEntry[];
+}
+
 export interface SecurityCommandPayload {
   vehicleId: string;
   reason: string;

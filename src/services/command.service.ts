@@ -9,6 +9,7 @@ import type {
   CommandSyncReport,
   ExecutedCommand,
   FlespiCommandDefinition,
+  GroupCommandResult,
   RawCommandPayload,
   SecurityCommandAccepted,
   SecurityCommandPayload,
@@ -133,6 +134,29 @@ export const securityService = {
       const { data } = await api.post<ApiResponse<SecurityCommandAccepted>>("/security/immobilizations", payload);
       return data.data;
     });
+  },
+
+  /**
+   * POST /security/vehicle-groups/:id/immobilizations — coupure IMMÉDIATE de
+   * chaque véhicule d'une flotte (100 max). Chaque véhicule passe par le
+   * chemin unitaire : un véhicule qui roule est refusé sans bloquer les autres.
+   * Pas de synchronisation ici : la réponse porte le sort de chaque véhicule.
+   */
+  async immobilizeGroup(groupId: string, reason: string): Promise<GroupCommandResult> {
+    const { data } = await api.post<ApiResponse<GroupCommandResult>>(
+      `/security/vehicle-groups/${groupId}/immobilizations`,
+      { reason },
+    );
+    return data.data;
+  },
+
+  /** POST /security/vehicle-groups/:id/restorations */
+  async restoreGroup(groupId: string, reason: string): Promise<GroupCommandResult> {
+    const { data } = await api.post<ApiResponse<GroupCommandResult>>(
+      `/security/vehicle-groups/${groupId}/restorations`,
+      { reason },
+    );
+    return data.data;
   },
 
   /** POST /security/restorations + sync (rétablissement carburant / alimentation). */

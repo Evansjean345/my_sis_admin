@@ -1,8 +1,10 @@
 import type { ActivityParams, AdminCommandListParams, AdminStatsParams } from "@/types/admin";
 import type { AuditLogListParams } from "@/types/audit";
 import type { DeviceListParams } from "@/types/device";
+import type { DriverListParams } from "@/types/driver";
 import type { GroupKind, GroupListParams } from "@/types/group";
 import type { OrganizationListParams } from "@/types/organization";
+import type { ScheduleListParams } from "@/types/schedule";
 import type { UserListParams } from "@/types/user";
 import type { VehicleListParams } from "@/types/vehicle";
 
@@ -57,7 +59,22 @@ export const queryKeys = {
     roles: (id: string) => ["organizations", "roles", id] as const,
     users: (id: string, params: UserListParams) => ["organizations", "users", id, params] as const,
   },
-  /** Une seule entrée pour les deux familles : la clé porte le type de groupe. */
+  /** Calendriers d'utilisation : invalider `schedules.all` rafraîchit aussi les états planifiés. */
+  schedules: {
+    all: ["schedules"] as const,
+    list: (params: ScheduleListParams) => ["schedules", "list", params] as const,
+    detail: (id: string) => ["schedules", "detail", id] as const,
+    preview: (id: string, at: string | undefined) => ["schedules", "preview", id, at ?? "now"] as const,
+    vehicleStatus: (vehicleId: string) => ["schedules", "vehicle-status", vehicleId] as const,
+    ofGroup: (groupId: string) => ["schedules", "group", groupId] as const,
+  },
+  drivers: {
+    all: ["drivers"] as const,
+    list: (params: DriverListParams) => ["drivers", "list", params] as const,
+    detail: (id: string) => ["drivers", "detail", id] as const,
+    ofVehicle: (vehicleId: string) => ["drivers", "vehicle", vehicleId] as const,
+  },
+  /** Une seule entrée pour les trois familles : la clé porte le type de groupe. */
   groups: {
     all: (kind: GroupKind) => ["groups", kind] as const,
     list: (kind: GroupKind, params: GroupListParams) => ["groups", kind, "list", params] as const,

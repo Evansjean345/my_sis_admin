@@ -16,6 +16,7 @@ const DOMAINS: Record<string, string> = {
   security: "Sécurité",
   billing: "Facturation",
   telemetry: "Télémétrie",
+  scheduling: "Planification",
 };
 
 const RESOURCES: Record<string, string> = {
@@ -26,6 +27,10 @@ const RESOURCES: Record<string, string> = {
   device: "boîtier",
   vehicle_group: "groupe de véhicules",
   device_group: "groupe de boîtiers",
+  driver: "conducteur",
+  driver_group: "équipe de conducteurs",
+  usage_schedule: "calendrier",
+  enforcement: "moteur planifié",
   device_command: "commande",
   geofence: "géofence",
   policy: "politique",
@@ -55,6 +60,27 @@ const VERBS: Record<string, string> = {
   unassigned: "retrait",
   login: "connexion",
   logout: "déconnexion",
+  cancelled: "annulation",
+  // conducteurs
+  organization_assigned: "rattachement à une organisation",
+  organization_removed: "retrait de l'organisation",
+  vehicle_assigned: "rattachement au véhicule",
+  vehicle_unassigned: "détachement du véhicule",
+  // calendriers
+  windows_replaced: "plages modifiées",
+  vehicles_attached: "véhicules rattachés",
+  vehicle_detached: "véhicule détaché",
+  groups_attached: "flottes rattachées",
+  group_detached: "flotte détachée",
+  // moteur planifié
+  dispatch: "commande émise",
+  completed: "objectif atteint",
+  overridden: "dérogation opérateur",
+  manual_cut_kept: "coupure manuelle conservée",
+  already_immobilized: "déjà immobilisé",
+  idle: "transition",
+  waiting_retry: "nouvelle tentative",
+  waiting_in_flight: "commande en cours",
 };
 
 function humanize(segment: string): string {
@@ -96,8 +122,11 @@ export function auditActionTone(action: string): StatusTone {
   if (verb === "failed" || verb === "rejected" || verb === "deleted") return "danger";
   if (domain === "security") return verb === "sent" || verb === "queued" ? "orange" : "warning";
   if (verb === "created" || verb === "members_added" || verb === "acknowledged") return "success";
-  if (verb === "members_removed" || verb === "unassigned") return "orange";
-  if (verb === "updated" || verb === "assigned") return "info";
+  if (domain === "scheduling") return verb === "dispatch" ? "orange" : verb === "overridden" ? "warning" : "info";
+  if (verb === "members_removed" || verb === "unassigned" || verb.endsWith("_removed") || verb.endsWith("_detached"))
+    return "orange";
+  if (verb === "updated" || verb === "assigned" || verb.endsWith("_assigned") || verb.endsWith("_attached"))
+    return "info";
   return "neutral";
 }
 
@@ -114,6 +143,9 @@ export const AUDIT_RESOURCE_TYPES: AuditResourceType[] = [
   "device",
   "vehicle_group",
   "device_group",
+  "driver",
+  "driver_group",
+  "usage_schedule",
   "device_command",
   "geofence",
   "policy",

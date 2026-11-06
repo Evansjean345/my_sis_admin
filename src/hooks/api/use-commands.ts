@@ -102,3 +102,30 @@ export function useRestoreVehicle() {
     onSettled: (_data, _error, { deviceId }) => invalidate(deviceId),
   });
 }
+
+/**
+ * Coupure / rétablissement IMMÉDIAT de toute une flotte. Les commandes
+ * touchent plusieurs boîtiers : on relit tout l'historique des commandes,
+ * les véhicules et l'état planifié.
+ */
+function useGroupCommand(
+  send: (groupId: string, reason: string) => ReturnType<typeof securityService.immobilizeGroup>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, reason }: { groupId: string; reason: string }) => send(groupId, reason),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["commands"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+    },
+  });
+}
+
+export function useImmobilizeGroup() {
+  return useGroupCommand((groupId, reason) => securityService.immobilizeGroup(groupId, reason));
+}
+
+export function useRestoreGroup() {
+  return useGroupCommand((groupId, reason) => securityService.restoreGroup(groupId, reason));
+}

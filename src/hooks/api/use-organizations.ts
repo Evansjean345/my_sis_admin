@@ -33,6 +33,20 @@ export function useOrganization(id: string | undefined) {
   });
 }
 
+/**
+ * Nom et code d'une organisation référencée par une autre ressource.
+ * Utilise le résumé embarqué par l'API quand il existe ; sinon lit la fiche
+ * (requête partagée et mise en cache par React Query).
+ */
+export function useOrganizationLabel(
+  id: string | null | undefined,
+  embedded?: { name: string; code: string } | null,
+): { name: string; code: string } | null {
+  const organization = useOrganization(embedded ? undefined : (id ?? undefined));
+  const source = embedded ?? organization.data;
+  return source ? { name: source.name, code: source.code } : null;
+}
+
 /** Rôles proposables dans l'organisation — `assignable` reflète la non-escalade. */
 export function useOrganizationRoles(id: string | undefined) {
   return useQuery({

@@ -22,6 +22,8 @@ import type { GroupFamily } from "./group-family";
 import { GroupFormDialog } from "./group-form-dialog";
 import { GroupMembersCard } from "./group-members-card";
 import { GroupRowActions } from "./group-row-actions";
+import { GroupSchedulesCard } from "./group-schedules-card";
+import { GroupSecurityActions } from "./group-security-actions";
 
 /**
  * Détail d'un groupe : composition et journal.
@@ -41,6 +43,8 @@ export function GroupDetailScreen({ family, id }: { family: GroupFamily; id: str
   }
 
   const data = group.data;
+  /** Horaires et commandes de sécurité n'ont de sens que pour une flotte de véhicules. */
+  const isFleet = family.kind === "vehicle_group";
 
   return (
     <div className="flex flex-col gap-4">
@@ -71,6 +75,9 @@ export function GroupDetailScreen({ family, id }: { family: GroupFamily; id: str
             <RefreshCw className={group.isFetching ? "animate-spin" : undefined} />
             <span className="sr-only">Actualiser</span>
           </Button>
+          {isFleet ? (
+            <GroupSecurityActions groupId={data.id} groupName={data.name} membersCount={data.membersCount} />
+          ) : null}
           <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil data-icon="inline-start" />
             Modifier
@@ -87,6 +94,7 @@ export function GroupDetailScreen({ family, id }: { family: GroupFamily; id: str
       <Tabs defaultValue="members">
         <TabsList>
           <TabsTrigger value="members">Composition</TabsTrigger>
+          {isFleet ? <TabsTrigger value="schedules">Horaires</TabsTrigger> : null}
           <TabsTrigger value="audit">Journal</TabsTrigger>
         </TabsList>
 
@@ -120,6 +128,12 @@ export function GroupDetailScreen({ family, id }: { family: GroupFamily; id: str
             members={data.members}
           />
         </TabsContent>
+
+        {isFleet ? (
+          <TabsContent value="schedules" className="pt-4">
+            <GroupSchedulesCard groupId={data.id} groupName={data.name} organizationId={data.organizationId} />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="audit" className="pt-4">
           <AuditLogPanel

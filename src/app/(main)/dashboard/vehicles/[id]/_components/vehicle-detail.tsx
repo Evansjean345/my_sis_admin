@@ -42,6 +42,8 @@ import { SpeedLimitDialog } from "../../_components/speed-limit-dialog";
 import { VehicleFormDialog } from "../../_components/vehicle-form-dialog";
 import { VehicleRowActions } from "../../_components/vehicle-row-actions";
 import { PositionCard } from "./position-card";
+import { VehicleDriversCard } from "./vehicle-drivers-card";
+import { VehicleScheduleCard } from "./vehicle-schedule-card";
 
 export function VehicleDetailView({ id }: { id: string }) {
   const router = useRouter();
@@ -234,6 +236,8 @@ export function VehicleDetailView({ id }: { id: string }) {
           </Card>
 
           <PositionCard position={v.lastPosition} id={v.id} />
+          <VehicleScheduleCard vehicleId={v.id} />
+          <VehicleDriversCard vehicleId={v.id} />
         </div>
       </div>
 

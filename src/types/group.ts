@@ -10,8 +10,12 @@ import type { PaginationParams } from "./api";
  * une divergence de forme ici serait une surprise, pas une fonctionnalité.
  */
 
-/** `vehicle_group` | `device_group` — type de ressource dans le journal d'audit. */
-export type GroupKind = "vehicle_group" | "device_group";
+/**
+ * `vehicle_group` | `device_group` | `driver_group` — type de ressource dans
+ * le journal d'audit. Les groupes de conducteurs (migration 018) suivent le
+ * même contrat que les deux familles historiques.
+ */
+export type GroupKind = "vehicle_group" | "device_group" | "driver_group";
 
 export interface Group {
   id: string;
