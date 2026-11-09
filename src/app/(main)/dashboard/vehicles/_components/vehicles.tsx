@@ -4,7 +4,14 @@ import { useState } from "react";
 
 import Link from "next/link";
 
-import { Download, Plus, RefreshCw, Search, ShieldCheck, Truck } from "lucide-react";
+import {
+  Download,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Truck,
+} from "lucide-react";
 
 import {
   OrganizationCell,
@@ -14,12 +21,33 @@ import { PageHeader } from "@/components/page-header";
 import { PaginationBar } from "@/components/pagination-bar";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state";
 import { StatusBadge } from "@/components/status-badge";
-import { vehicleStatusMeta, vehicleTypeLabels } from "@/components/status-labels";
+import {
+  vehicleStatusMeta,
+  vehicleTypeLabels,
+} from "@/components/status-labels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useVehicles } from "@/hooks/api/use-vehicles";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { downloadCsv, formatDate, formatNumber } from "@/lib/format";
@@ -49,6 +77,9 @@ export function Vehicles() {
 
   const rows = vehicles.data?.data ?? [];
 
+  /*
+  Export CSV : exporter les données au format CSV , format Excel
+  */
   function exportCsv() {
     downloadCsv(
       `vehicules-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -75,7 +106,11 @@ export function Vehicles() {
         description="Tous les véhicules de la plateforme : flotte, limites de vitesse et immobilisation à distance."
         actions={
           <>
-            <Button variant="outline" onClick={exportCsv} disabled={rows.length === 0}>
+            <Button
+              variant="outline"
+              onClick={exportCsv}
+              disabled={rows.length === 0}
+            >
               <Download data-icon="inline-start" />
               Exporter
             </Button>
@@ -132,8 +167,16 @@ export function Vehicles() {
               </SelectGroup>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => vehicles.refetch()} disabled={vehicles.isFetching}>
-            <RefreshCw data-icon="inline-start" className={vehicles.isFetching ? "animate-spin" : undefined} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => vehicles.refetch()}
+            disabled={vehicles.isFetching}
+          >
+            <RefreshCw
+              data-icon="inline-start"
+              className={vehicles.isFetching ? "animate-spin" : undefined}
+            />
             Actualiser
           </Button>
         </div>
@@ -145,7 +188,10 @@ export function Vehicles() {
             <LoadingRows rows={6} />
           ) : vehicles.isError ? (
             <div className="px-4">
-              <ErrorState error={vehicles.error} onRetry={() => vehicles.refetch()} />
+              <ErrorState
+                error={vehicles.error}
+                onRetry={() => vehicles.refetch()}
+              />
             </div>
           ) : rows.length === 0 ? (
             <div className="px-4">
@@ -153,7 +199,9 @@ export function Vehicles() {
                 icon={<Truck />}
                 title="Aucun véhicule"
                 description={
-                  debouncedSearch ? "Aucun résultat pour cette recherche." : "Ajoutez votre premier véhicule."
+                  debouncedSearch
+                    ? "Aucun résultat pour cette recherche."
+                    : "Ajoutez votre premier véhicule."
                 }
                 action={
                   <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -170,14 +218,26 @@ export function Vehicles() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Immatriculation</TableHead>
-                      <TableHead className="hidden md:table-cell">Organisation</TableHead>
-                      <TableHead className="hidden md:table-cell">Marque / modèle</TableHead>
-                      <TableHead className="hidden lg:table-cell">Type</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Organisation
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        Marque / modèle
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Type
+                      </TableHead>
                       <TableHead>Limite</TableHead>
-                      <TableHead className="hidden lg:table-cell">Kilométrage</TableHead>
-                      <TableHead className="hidden sm:table-cell">Immobilisation</TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Kilométrage
+                      </TableHead>
+                      <TableHead className="hidden sm:table-cell">
+                        Immobilisation
+                      </TableHead>
                       <TableHead>Statut</TableHead>
-                      <TableHead className="hidden xl:table-cell">Créé le</TableHead>
+                      <TableHead className="hidden xl:table-cell">
+                        Créé le
+                      </TableHead>
                       <TableHead className="w-12">
                         <span className="sr-only">Actions</span>
                       </TableHead>
@@ -185,7 +245,10 @@ export function Vehicles() {
                   </TableHeader>
                   <TableBody>
                     {rows.map((v) => {
-                      const meta = vehicleStatusMeta[v.status] ?? { label: v.status, tone: "neutral" as const };
+                      const meta = vehicleStatusMeta[v.status] ?? {
+                        label: v.status,
+                        tone: "neutral" as const,
+                      };
                       return (
                         <TableRow key={v.id}>
                           <TableCell>
@@ -194,8 +257,14 @@ export function Vehicles() {
                               prefetch={false}
                               className="flex flex-col hover:underline"
                             >
-                              <span className="font-medium">{v.registration}</span>
-                              {v.label ? <span className="text-muted-foreground text-xs">{v.label}</span> : null}
+                              <span className="font-medium">
+                                {v.registration}
+                              </span>
+                              {v.label ? (
+                                <span className="text-muted-foreground text-xs">
+                                  {v.label}
+                                </span>
+                              ) : null}
                             </Link>
                           </TableCell>
                           <TableCell className="hidden max-w-48 md:table-cell">
@@ -203,14 +272,21 @@ export function Vehicles() {
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             <div className="flex flex-col">
-                              <span>{[v.brand, v.model].filter(Boolean).join(" ") || "—"}</span>
-                              <span className="text-muted-foreground text-xs">{v.year ?? ""}</span>
+                              <span>
+                                {[v.brand, v.model].filter(Boolean).join(" ") ||
+                                  "—"}
+                              </span>
+                              <span className="text-muted-foreground text-xs">
+                                {v.year ?? ""}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell className="hidden text-muted-foreground lg:table-cell">
                             {vehicleTypeLabels[v.vehicleType] ?? v.vehicleType}
                           </TableCell>
-                          <TableCell className="tabular-nums">{formatNumber(v.speedLimitKph)} km/h</TableCell>
+                          <TableCell className="tabular-nums">
+                            {formatNumber(v.speedLimitKph)} km/h
+                          </TableCell>
                           <TableCell className="hidden text-muted-foreground tabular-nums lg:table-cell">
                             {formatNumber(v.odometerKm)} km
                           </TableCell>
@@ -227,7 +303,9 @@ export function Vehicles() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <StatusBadge tone={meta.tone}>{meta.label}</StatusBadge>
+                            <StatusBadge tone={meta.tone}>
+                              {meta.label}
+                            </StatusBadge>
                           </TableCell>
                           <TableCell className="hidden text-muted-foreground xl:table-cell">
                             {formatDate(v.createdAt)}
@@ -258,7 +336,11 @@ export function Vehicles() {
         </CardContent>
       </Card>
 
-      <VehicleFormDialog open={createOpen} onOpenChange={setCreateOpen} defaultOrganizationId={organizationId} />
+      <VehicleFormDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultOrganizationId={organizationId}
+      />
     </div>
   );
 }
