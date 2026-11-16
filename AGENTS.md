@@ -34,7 +34,7 @@ This project uses npm.
 
 ```bash
 npm install
-npm run dev
+npm run dev:superadmin   # ou dev:admin, dev:client
 ```
 
 Available commands:
@@ -50,28 +50,26 @@ npm run generate:presets
 
 There is currently no automated test command. Run build, lint, check, or other validation commands only when the user explicitly requests that validation.
 
-## Co-location-based structure
+## Monorepo structure
 
-Keep feature code close to the route that owns it.
+This repository is an npm-workspaces monorepo: three Next.js apps (one per access level) and one shared package.
 
-- Dashboard routes: `src/app/(main)/dashboard/<screen>/page.tsx`
-- Screen-specific components, data, and schemas: `src/app/(main)/dashboard/<screen>/_components/`
-- Shared dashboard components: `src/app/(main)/dashboard/_components/`
-- Shared application components: `src/components/`
-- Local shadcn components: `src/components/ui/`
-- Shared hooks and utilities: `src/hooks/` and `src/lib/`
-- Theme presets: `src/styles/presets/`
-
-Keep a component inside its route until it is reused by another feature. Do not move screen-specific code into a shared directory preemptively.
+- `apps/superadmin` (level 1, `super_admin`), `apps/admin` (level 2, `admin`), `apps/client` (level 3, `operator`).
+- Each app only contains routing and app-specific code: `src/app/**/page.tsx|layout.tsx`, `src/navigation/`, `src/config/app.ts`, `src/proxy.ts`.
+- `packages/shared` (`@sisbm/shared`, import alias `@shared/*`) holds everything else: `src/features/<screen>/` (screen components), `src/components/` (UI and providers), `src/services/`, `src/hooks/`, `src/lib/`, `src/types/`, `src/stores/`, `src/styles/`.
+- Inside an app, `@/*` resolves to the app's own `src/`; inside `packages/shared`, only `@shared/*` is used.
+- A screen used by several apps lives in `packages/shared/src/features/<screen>/`; each app adds a thin `page.tsx` that renders it.
+- Shared screens adapt to the level through `useAccess()` / `<Can>` (`@shared/components/providers/access-provider`). The API stays the authority: hiding is not authorizing.
+- Do not modify files inside `packages/shared/src/components/ui/` or `packages/shared/src/components/calendar/`.
 
 ## Creating or extending a screen
 
-1. Inspect the closest current screen before writing code. Finance, Infrastructure, CRM, and Analytics are useful references. Do not use routes under `(legacy)` as references for new screens unless maintaining a legacy route.
+1. Decide which app(s) need the screen, then inspect the closest current screen before writing code. Finance, Infrastructure, CRM, and Analytics are useful references. Do not use routes under `(legacy)` as references for new screens unless maintaining a legacy route.
 2. When reproducing a UI from a screenshot or image, follow its visual direction closely, including layout, hierarchy, spacing, component structure, and important details. Implement it with the project's existing components and semantic theme tokens rather than copying raw color values. If the design needs a color that is not available through the existing theme tokens, or the user explicitly requests a non-theme color, use a named color from Tailwind's default palette. Do not use arbitrary hex, RGB, HSL, or OKLCH values.
 3. Reuse the existing dashboard shell, local components, layout controls, and theme tokens.
 4. Break each new page into focused components inside the route's `_components/` directory. Keep `page.tsx` small and focused on composing those pieces.
 5. Keep `page.tsx` as a Server Component by default. Move interactive or browser-dependent code into a dedicated Client Component.
-6. Add the screen to `src/navigation/sidebar/sidebar-items.ts` when it should appear in the dashboard navigation.
+6. Add the screen to `apps/<app>/src/navigation/sidebar-items.ts` of each app where it should appear.
 7. Decide the information hierarchy before choosing widgets. Let the content determine the page structure.
 8. Keep the established visual rhythm where it fits: compact spacing, clear typography hierarchy, responsive action rows, and grids that collapse cleanly on smaller screens.
 9. Widget selection is not a fixed formula. Try different arrangements of cards, resource rows, meters, charts, tabs, empty states, and actions, then keep the version that communicates the content clearly and feels consistent with the project.

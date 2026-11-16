@@ -1,0 +1,5 @@
+/* Styles communs aux trois applications (thème, presets, jetons). */
+@import "../../../../packages/shared/src/styles/globals.css";
+
+/* Tailwind v4 ne scanne que l'application : on lui indique le code partagé. */
+@source "../../../../packages/shared/src";

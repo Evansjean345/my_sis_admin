@@ -1,0 +1,17 @@
+{
+  "name": "@sisbm/client",
+  "version": "2.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "start": "next start -p 3002",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sisbm/shared": "*",
+    "next": "^16.3.5",
+    "react": "^19.0.0-rc.1",
+    "react-dom": "^19.0.0-rc.1"
+  }
+}

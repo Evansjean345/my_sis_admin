@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@shared/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/env.d.ts"],
+  "exclude": ["node_modules", "src/scripts/generate-theme-presets.ts"]
+}

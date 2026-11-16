@@ -1,0 +1,79 @@
+import type { DayForecast } from "@shared/features/clock/analytics/forecast";
+import { formatHours, formatVehicles } from "@shared/features/clock/analytics/format";
+import type { ScheduleHistoryDay } from "@shared/types/schedule";
+
+/**
+ * Indicateurs affichables dans le calendrier du mois, pour chaque source :
+ * le PRÉVU (calculé ici à partir des calendriers) et le RÉEL (historique du
+ * moteur agrégé par le back-end).
+ */
+export type Source = "prevu" | "reel";
+
+export interface MetricDef<T> {
+  label: string;
+  /** Phrase d'unité : légende et étiquettes accessibles. */
+  unit: string;
+  format: (value: number) => string;
+  value: (day: T) => number;
+  /** Comptage (véhicules, commandes) : légende à bornes entières. */
+  integer: boolean;
+}
+
+const count = (v: number) => formatVehicles(v);
+
+export const PLANNED_METRICS = {
+  vehicleHours: {
+    label: "Heures-véhicule",
+    unit: "Heures-véhicule d'immobilisation",
+    format: formatHours,
+    value: (d) => d.vehicleHours,
+    integer: false,
+  },
+  affected: {
+    label: "Véhicules concernés",
+    unit: "Véhicules immobilisés au moins une fois",
+    format: count,
+    value: (d) => d.affected,
+    integer: true,
+  },
+  peak: {
+    label: "Pic simultané",
+    unit: "Véhicules immobilisés en même temps (max.)",
+    format: count,
+    value: (d) => d.peak,
+    integer: true,
+  },
+} satisfies Record<string, MetricDef<DayForecast>>;
+
+export const REAL_METRICS = {
+  confirmedCuts: {
+    label: "Coupures confirmées",
+    unit: "Coupures confirmées par le boîtier",
+    format: count,
+    value: (d) => d.cut.acknowledged,
+    integer: true,
+  },
+  refusals: {
+    label: "Refus",
+    unit: "Tentatives refusées avant émission",
+    format: count,
+    value: (d) => d.refusals,
+    integer: true,
+  },
+  failures: {
+    label: "Échecs",
+    unit: "Commandes échouées ou expirées",
+    format: count,
+    value: (d) => d.cut.failed + d.cut.expired + d.restore.failed + d.restore.expired,
+    integer: true,
+  },
+} satisfies Record<string, MetricDef<ScheduleHistoryDay>>;
+
+export type PlannedMetric = keyof typeof PLANNED_METRICS;
+export type RealMetric = keyof typeof REAL_METRICS;
+
+/** Une case du calendrier, quelle que soit la source. */
+export interface DayCell {
+  date: string;
+  value: number;
+}

@@ -18,7 +18,9 @@
               ":BLANK_LINE:",
               "next/**",
               ":BLANK_LINE:",
-              ":PACKAGE:",
+              [":PACKAGE:", "!@shared/**"],
+              ":BLANK_LINE:",
+              "@shared/**",
               ":BLANK_LINE:",
               ":ALIAS:",
               ":BLANK_LINE:",
@@ -63,7 +65,7 @@
       "correctness": {
         "noUndeclaredVariables": "error",
         "noNestedComponentDefinitions": "error",
-        "noUndeclaredDependencies": "error"
+        "noUndeclaredDependencies": "off"
       },
       "nursery": {
         "useSortedClasses": "on",

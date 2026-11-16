@@ -1,146 +1,75 @@
-# Next.js Admin Template with TypeScript & Shadcn UI
+# SISBM CORE — Tableaux de bord (monorepo)
 
-**Studio Admin** - Includes multiple dashboards, authentication layouts, customizable theme presets, and more.
+Trois applications Next.js **séparées**, une par niveau d'accès, qui partagent leur code dans `packages/shared`.
 
-<img src="https://github.com/arhamkhnz/next-shadcn-admin-dashboard/blob/main/media/dashboard.png?version=5" alt="Dashboard Screenshot">
+| Application | Niveau | Rôle API | Dossier | Port dev | Adresse prévue |
+|---|---|---|---|---|---|
+| Espace Super Admin | 1 | `super_admin` | `apps/superadmin` | 3000 | superadmin.sisbm-core.com |
+| Espace Administration | 2 | `admin` | `apps/admin` | 3001 | admin.sisbm-core.com |
+| Espace Client | 3 | `operator` | `apps/client` | 3002 | app.sisbm-core.com |
 
-Most admin templates I found, free or paid, felt cluttered, outdated, or too rigid. I built this as a cleaner alternative with features often missing in others, such as theme toggling and layout controls, while keeping the design modern, minimal, and flexible.
+Chaque application se construit et se déploie seule. Elle n'ouvre de session **qu'aux comptes de son niveau** :
+un compte d'un autre niveau est refusé à la connexion (son jeton est révoqué) et renvoyé vers son espace.
 
-> **View demo:** [studio admin](https://studio-admin.arhamkhnz.com)
-
-> [!NOTE]
-> Looking for the Base UI version? Check out [next-shadcn-admin-dashboard-baseui](https://github.com/arhamkhnz/next-shadcn-admin-dashboard-baseui).
->
-> Looking for the React Aria version? Check out [arhamkhnz/next-shadcn-admin-dashboard-aria](https://github.com/arhamkhnz/next-shadcn-admin-dashboard-aria).
->
-> Looking for the TanStack Start version? Check out [tanstack-shadcn-admin-dashboard](https://github.com/arhamkhnz/tanstack-shadcn-admin-dashboard).
-
-> [!TIP]
-> I’m also working on Nuxt.js and Svelte versions of this dashboard. They’ll be live soon.
-
-## Features
-
-- Built with Next.js 16, TypeScript, Tailwind CSS v4, and Shadcn UI  
-- Responsive and mobile-friendly  
-- Customizable theme presets (light/dark modes with color schemes like Tangerine, Brutalist, and more)  
-- Flexible layouts (collapsible sidebar, variable content widths)  
-- Authentication flows and screens  
-- Prebuilt dashboards (Default, CRM, Finance, Analytics, Productivity) plus legacy variants  
-- Role-Based Access Control (RBAC) with config-driven UI and multi-tenant support *(planned)*  
-
-> [!NOTE]
-> The default dashboard uses the **shadcn neutral** theme.  
-> It also includes additional color presets inspired by [Tweakcn](https://tweakcn.com):  
->
-> - Tangerine  
-> - Neo Brutalism  
-> - Soft Pop  
->
-> You can create more presets by following the same structure as the existing ones.
-
-> Looking for the **Next.js 15** version?  
-> Check out the [`archive/next15`](https://github.com/arhamkhnz/next-shadcn-admin-dashboard/tree/archive/next15) branch.  
-> This branch contains the setup prior to upgrading to Next 16 and the React Compiler.
-
-> Looking for the **Next.js 14 + Tailwind CSS v3** version?  
-> Check out the [`archive/next14-tailwindv3`](https://github.com/arhamkhnz/next-shadcn-admin-dashboard/tree/archive/next14-tailwindv3) branch.  
-> It has a different color theme and is not actively maintained, but I try to keep it updated with major changes.  
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router), TypeScript, Tailwind CSS v4  
-- **UI Components**: Shadcn UI  
-- **Validation**: Zod  
-- **Forms & State Management**: React Hook Form, Zustand  
-- **Tables & Data Handling**: TanStack Table  
-- **Tooling & DX**: Biome, Husky  
-
-## Screens
-
-### Available
-- Default Dashboard  
-- CRM Dashboard  
-- Finance Dashboard  
-- Analytics Dashboard  
-- Productivity Dashboard  
-- E-commerce Dashboard  
-- Academy Dashboard  
-- Logistics Dashboard  
-- Infrastructure Dashboard  
-- File Manager  
-- Patient Monitoring  
-- Chat Page  
-- Email Page  
-- Profile  
-- Users Management  
-- Roles Management  
-- Kanban Board  
-- Tasks Page  
-- Invoice Page  
-- Calendar Page  
-- Authentication (4 screens)  
-- Legacy: Default v1, CRM v1, Finance v1, Analytics v1
-
-### Planned
-I’ve added all the planned screens. Feel free to open an issue for requesting something specific.
-
-## Colocation File System Architecture
-
-This project follows a **colocation-based architecture** each feature keeps its own pages, components, and logic inside its route folder.  
-Shared UI, hooks, and configuration live at the top level, making the codebase modular, scalable, and easier to maintain as the app grows.
-
-For a full breakdown of the structure with examples, see the [Next Colocation Template](https://github.com/arhamkhnz/next-colocation-template).
-
-## Getting Started
-
-You can run this project locally, or deploy it instantly with Vercel.
-
-### Deploy with Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Farhamkhnz%2Fnext-shadcn-admin-dashboard)
-
-_Deploy your own copy with one click._
-
-### Run locally
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/arhamkhnz/next-shadcn-admin-dashboard.git
-   ```
-   
-2. **Navigate into the project**
-   ```bash
-    cd next-shadcn-admin-dashboard
-   ```
-   
-3. **Install dependencies**
-   ```bash
-    npm install
-   ```
-
-4. **Start the development server**
-   ```bash
-   npm run dev
-   ```
-
-Your app will be running at [http://localhost:3000](http://localhost:3000)
-
-### Formatting and Linting
-
-Format, lint, and organize imports
-```bash
-npx @biomejs/biome check --write
 ```
-> For more information on available rules, fixes, and CLI options, refer to the [Biome documentation](https://biomejs.dev/).
+apps/
+├─ superadmin/   routes historiques /dashboard/... (inchangées)
+├─ admin/        /dashboard = accueil de l'organisation
+└─ client/       /dashboard = suivi temps réel de l'opérateur
+packages/
+└─ shared/       @sisbm/shared — alias d'import `@shared/*`
+   └─ src/
+      ├─ features/      écrans (véhicules, trackers, flotte, horaires, accueils…)
+      ├─ components/    UI (shadcn) et providers (accès, temps réel, React Query)
+      ├─ services/      appels API — `scopedPath()` choisit /admin/* (niveau 1) ou les routes d'organisation
+      ├─ hooks/ lib/ types/ stores/ styles/ assets/
+      └─ navigation/types.ts
+```
 
----
+Dans une application : `src/app` (routes), `src/navigation` (menu), `src/config/app.ts` (niveau servi),
+`src/proxy.ts` (garde des routes). Tout le reste vient de `@shared/*`.
 
-> [!IMPORTANT]  
-> This project is updated frequently. If you’re working from a fork or an older clone, pull the latest changes before syncing. Some updates may include breaking changes.
+## Démarrer
 
----
+```bash
+npm install                 # à la racine : installe les 4 paquets (workspaces npm)
+cp apps/admin/.env.example apps/admin/.env   # idem pour superadmin et client
+npm run dev:superadmin      # http://localhost:3000
+npm run dev:admin           # http://localhost:3001
+npm run dev:client          # http://localhost:3002
+```
 
-Contributions are welcome. Feel free to open issues, feature requests, or start a discussion.
+Variables (par application) :
 
+- `NEXT_PUBLIC_URL` : URL de l'API SISBM CORE, sans `/api/v1`.
+- `NEXT_PUBLIC_SUPERADMIN_APP_URL`, `NEXT_PUBLIC_ADMIN_APP_URL`, `NEXT_PUBLIC_CLIENT_APP_URL` :
+  adresses publiques des trois espaces, pour renvoyer un compte vers le bon.
 
-**Happy Vibe Coding!**
+## Construire / déployer
+
+```bash
+npm run build               # les trois
+npm run build:admin         # une seule
+npm run start -w @sisbm/admin
+```
+
+Déployer chaque dossier `apps/<appli>` comme un projet indépendant (racine du monorepo = répertoire de travail,
+pour que `packages/shared` soit présent). Un domaine par application : les sessions (cookies) sont séparées.
+
+## Temps réel
+
+Positions et état des boîtiers arrivent par **AdonisJS Transmit (SSE)**, déjà exposé par l'API
+(`/__transmit/events`, canaux `org/<id>/positions` et `org/<id>/devices`). L'abonnement est authentifié par le jeton.
+En production, le CORS de l'API doit autoriser chaque domaine avec `credentials`.
+
+## Mot de passe oublié
+
+`/auth/v2/forgot-password` dans les trois applications : code à 6 chiffres **par SMS uniquement**
+(`POST /auth/password/forgot { identifier, channel: "sms" }`), vérification, nouveau mot de passe.
+
+## Qualité
+
+```bash
+npm run typecheck           # tsc dans chaque paquet
+npm run check               # Biome (lint + format)
+```

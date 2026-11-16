@@ -1,0 +1,46 @@
+diff a/packages/shared/src/features/fleet/fleet-map-card.tsx b/packages/shared/src/features/fleet/fleet-map-card.tsx	(rejected hunks)
+@@ -18,19 +18,31 @@ import {
+   X,
+ } from "lucide-react";
+ 
+-import { vehicleTypeLabels } from "@/components/status-labels";
+-import { Badge } from "@/components/ui/badge";
+-import { Button } from "@/components/ui/button";
+-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+-import { formatRelative } from "@/lib/format";
+-import { VEHICLE_TYPES, type VehicleDetail, type VehicleType } from "@/types/vehicle";
+-
+-import { FleetMap } from "./fleet-map";
+-import { CATEGORY_OF, FLEET_CATEGORIES, FLEET_STATE_META, type FleetCategory, fleetState } from "./fleet-state";
+-import type { Basemap, FleetMapProps } from "./map";
++import { vehicleTypeLabels } from "@shared/components/status-labels";
++import { Badge } from "@shared/components/ui/badge";
++import { Button } from "@shared/components/ui/button";
++import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@shared/components/ui/card";
++import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@shared/components/ui/input-group";
++import {
++  Select,
++  SelectContent,
++  SelectGroup,
++  SelectItem,
++  SelectTrigger,
++  SelectValue,
++} from "@shared/components/ui/select";
++import { Tooltip, TooltipContent, TooltipTrigger } from "@shared/components/ui/tooltip";
++import { FleetMap } from "@shared/features/fleet/fleet-map";
++import {
++  CATEGORY_OF,
++  FLEET_CATEGORIES,
++  FLEET_STATE_META,
++  type FleetCategory,
++  fleetState,
++} from "@shared/features/fleet/fleet-state";
++import type { Basemap, FleetMapProps } from "@shared/features/fleet/map";
++import { formatRelative } from "@shared/lib/format";
++import { VEHICLE_TYPES, type VehicleDetail, type VehicleType } from "@shared/types/vehicle";
+ 
+ export type TypeFilter = VehicleType | "all";
+ 
