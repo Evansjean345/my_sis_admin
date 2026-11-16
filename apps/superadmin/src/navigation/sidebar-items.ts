@@ -10,7 +10,6 @@ import {
   Gauge,
   Handshake,
   LayoutDashboard,
-  type LucideIcon,
   Map as MapIcon,
   MapPinned,
   Package,
@@ -31,56 +30,8 @@ import {
   Workflow,
 } from "lucide-react";
 
-export type NavBadge = "new" | "soon";
+import type { NavGroup } from "@shared/navigation/types";
 
-export interface NavSubItem {
-  id: string;
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-  badge?: NavBadge;
-  disabled?: boolean;
-  newTab?: boolean;
-}
-
-interface NavItemBase {
-  id: string;
-  title: string;
-  icon?: LucideIcon;
-  badge?: NavBadge;
-  disabled?: boolean;
-  newTab?: boolean;
-}
-
-export interface NavMainLinkItem extends NavItemBase {
-  url: string;
-  subItems?: never;
-}
-
-export interface NavMainParentItem extends NavItemBase {
-  subItems: NavSubItem[];
-}
-
-export type NavMainItem = NavMainLinkItem | NavMainParentItem;
-
-export interface NavGroup {
-  id: number;
-  label?: string;
-  items: NavMainItem[];
-}
-
-/**
- * Écran prévu par les spécifications mais pas encore développé : page d'attente
- * qui nomme le module. Le paramètre garde chaque entrée distincte dans le menu.
- */
-const soon = (module: string) =>
-  `/dashboard/coming-soon?module=${encodeURIComponent(module)}`;
-
-/**
- * Menu principal = les 7 modules des spécifications SuperAdmin, dans leur ordre.
- * Le second groupe rassemble les rubriques de la plateforme Client (§III.1) :
- * à terme, elles s'ouvriront depuis la fiche client, filtrées sur ce client.
- */
 export const sidebarItems: NavGroup[] = [
   {
     id: 1,

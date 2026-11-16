@@ -18,22 +18,11 @@ import {
   X,
 } from "lucide-react";
 
-import { vehicleTypeLabels } from "@/components/status-labels";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { vehicleTypeLabels } from "@shared/components/status-labels";
+import { Badge } from "@shared/components/ui/badge";
+import { Button } from "@shared/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@shared/components/ui/card";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@shared/components/ui/input-group";
 import {
   Select,
   SelectContent,
@@ -41,35 +30,23 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { formatRelative } from "@/lib/format";
-import {
-  VEHICLE_TYPES,
-  type VehicleDetail,
-  type VehicleType,
-} from "@/types/vehicle";
-
-import { FleetMap } from "./fleet-map";
+} from "@shared/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@shared/components/ui/tooltip";
+import { FleetMap } from "@shared/features/fleet/fleet-map";
 import {
   CATEGORY_OF,
   FLEET_CATEGORIES,
   FLEET_STATE_META,
   type FleetCategory,
   fleetState,
-} from "./fleet-state";
-import type { Basemap, FleetMapProps } from "./map";
+} from "@shared/features/fleet/fleet-state";
+import type { Basemap, FleetMapProps } from "@shared/features/fleet/map";
+import { formatRelative } from "@shared/lib/format";
+import { VEHICLE_TYPES, type VehicleDetail, type VehicleType } from "@shared/types/vehicle";
 
 export type TypeFilter = VehicleType | "all";
 
-interface FleetMapCardProps extends Omit<
-  FleetMapProps,
-  "basemap" | "onMapReady" | "className"
-> {
+interface FleetMapCardProps extends Omit<FleetMapProps, "basemap" | "onMapReady" | "className"> {
   /** Tous les véhicules (compteurs de légende, recherche) ; `vehicles` = véhicules filtrés affichés. */
   allVehicles: VehicleDetail[];
   title?: string;
@@ -109,11 +86,7 @@ function LocationCard({
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return vehicles
-      .filter((v) =>
-        `${v.registration} ${v.label ?? ""} ${v.brand ?? ""} ${v.model ?? ""}`
-          .toLowerCase()
-          .includes(q),
-      )
+      .filter((v) => `${v.registration} ${v.label ?? ""} ${v.brand ?? ""} ${v.model ?? ""}`.toLowerCase().includes(q))
       .slice(0, 6);
   }, [query, vehicles]);
 
@@ -144,11 +117,7 @@ function LocationCard({
             />
             {query ? (
               <InputGroupAddon align="inline-end">
-                <InputGroupButton
-                  size="icon-xs"
-                  aria-label="Effacer"
-                  onClick={() => setQuery("")}
-                >
+                <InputGroupButton size="icon-xs" aria-label="Effacer" onClick={() => setQuery("")}>
                   <X />
                 </InputGroupButton>
               </InputGroupAddon>
@@ -157,9 +126,7 @@ function LocationCard({
           {query.trim() ? (
             <ul className="absolute inset-x-0 top-full mt-1 overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-lg">
               {results.length === 0 ? (
-                <li className="px-3 py-2 text-muted-foreground text-sm">
-                  Aucun véhicule
-                </li>
+                <li className="px-3 py-2 text-muted-foreground text-sm">Aucun véhicule</li>
               ) : (
                 results.map((v) => (
                   <li key={v.id}>
@@ -172,9 +139,7 @@ function LocationCard({
                       }}
                     >
                       <span className="font-medium">{v.registration}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {FLEET_STATE_META[fleetState(v)].label}
-                      </span>
+                      <span className="text-muted-foreground text-xs">{FLEET_STATE_META[fleetState(v)].label}</span>
                     </button>
                   </li>
                 ))
@@ -186,9 +151,7 @@ function LocationCard({
 
       <div className="flex items-center gap-3 rounded-lg border bg-popover/95 p-3 text-popover-foreground shadow-md backdrop-blur">
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-medium">
-            {selected ? selected.registration : "Abidjan"}
-          </span>
+          <span className="truncate font-medium">{selected ? selected.registration : "Abidjan"}</span>
           <span className="truncate text-muted-foreground text-xs">
             {selected
               ? p
@@ -202,12 +165,7 @@ function LocationCard({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon-sm" variant="ghost" asChild>
-                  <a
-                    href={osmLink(lat, lng)}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Ouvrir dans OpenStreetMap"
-                  >
+                  <a href={osmLink(lat, lng)} target="_blank" rel="noreferrer" aria-label="Ouvrir dans OpenStreetMap">
                     <ExternalLink />
                   </a>
                 </Button>
@@ -216,18 +174,8 @@ function LocationCard({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  size="icon-sm"
-                  variant="secondary"
-                  asChild
-                  className="rounded-full"
-                >
-                  <a
-                    href={directionsLink(lat, lng)}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Itinéraire"
-                  >
+                <Button size="icon-sm" variant="secondary" asChild className="rounded-full">
+                  <a href={directionsLink(lat, lng)} target="_blank" rel="noreferrer" aria-label="Itinéraire">
                     <Navigation />
                   </a>
                 </Button>
@@ -260,8 +208,7 @@ export function FleetMapCard({
   const [fullscreen, setFullscreen] = useState(false);
 
   useEffect(() => {
-    const onChange = () =>
-      setFullscreen(document.fullscreenElement === cardRef.current);
+    const onChange = () => setFullscreen(document.fullscreenElement === cardRef.current);
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
@@ -272,50 +219,29 @@ export function FleetMapCard({
   }
 
   const counts = useMemo(() => {
-    const c: Record<FleetCategory, number> = {
-      moving: 0,
-      alert: 0,
-      parked: 0,
-      offline: 0,
-    };
+    const c: Record<FleetCategory, number> = { moving: 0, alert: 0, parked: 0, offline: 0 };
     for (const v of allVehicles) c[CATEGORY_OF[fleetState(v)]]++;
     return c;
   }, [allVehicles]);
 
   const presentTypes = useMemo(
-    () =>
-      VEHICLE_TYPES.filter((t) => allVehicles.some((v) => v.vehicleType === t)),
+    () => VEHICLE_TYPES.filter((t) => allVehicles.some((v) => v.vehicleType === t)),
     [allVehicles],
   );
-  const selected =
-    allVehicles.find((v) => v.id === mapProps.selectedId) ?? null;
+  const selected = allVehicles.find((v) => v.id === mapProps.selectedId) ?? null;
   const active = allVehicles.length - counts.offline;
 
   function recenter() {
     if (!map) return;
     const pts = mapProps.vehicles
       .filter((v) => v.lastPosition)
-      .map(
-        (v) =>
-          [
-            Number(v.lastPosition?.latitude),
-            Number(v.lastPosition?.longitude),
-          ] as [number, number],
-      );
+      .map((v) => [Number(v.lastPosition?.latitude), Number(v.lastPosition?.longitude)] as [number, number]);
     if (pts.length === 1) map.setView(pts[0], 15);
-    else if (pts.length > 1)
-      map.fitBounds(pts, { padding: [60, 60], maxZoom: 16 });
+    else if (pts.length > 1) map.fitBounds(pts, { padding: [60, 60], maxZoom: 16 });
   }
 
   return (
-    <Card
-      ref={cardRef}
-      className={cn(
-        "min-h-0 gap-3 pb-3",
-        fullscreen && "h-dvh rounded-none",
-        className,
-      )}
-    >
+    <Card ref={cardRef} className={cn("min-h-0 gap-3 pb-3", fullscreen && "h-dvh rounded-none", className)}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2">
           <span className="relative flex size-2.5">
@@ -323,60 +249,35 @@ export function FleetMapCard({
             <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
           </span>
           {title}
-          <Badge
-            variant="secondary"
-            className="rounded-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-          >
-            {active} véhicule{active > 1 ? "s" : ""} actif
-            {active > 1 ? "s" : ""}
+          <Badge variant="secondary" className="rounded-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            {active} véhicule{active > 1 ? "s" : ""} actif{active > 1 ? "s" : ""}
           </Badge>
         </CardTitle>
         <CardAction className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onRefresh}
-            disabled={refreshing}
-            aria-label="Actualiser"
-          >
+          <Button size="sm" variant="outline" onClick={onRefresh} disabled={refreshing} aria-label="Actualiser">
             <RefreshCw className={refreshing ? "animate-spin" : undefined} />
           </Button>
           <Button size="sm" variant="outline" onClick={toggleFullscreen}>
-            {fullscreen ? (
-              <Minimize data-icon="inline-start" />
-            ) : (
-              <Maximize data-icon="inline-start" />
-            )}
+            {fullscreen ? <Minimize data-icon="inline-start" /> : <Maximize data-icon="inline-start" />}
             {fullscreen ? "Quitter" : "Plein écran"}
           </Button>
         </CardAction>
       </CardHeader>
 
       <CardContent className="min-h-0 flex-1 px-3">
-        <div className="relative size-full min-h-105 overflow-hidden rounded-lg border">
+        <div className="relative size-full min-h-[420px] overflow-hidden rounded-lg border">
           <FleetMap {...mapProps} basemap={basemap} onMapReady={setMap} />
 
           {/* Haut gauche : recherche + fiche de localisation */}
           <div className="absolute top-3 left-3 z-10">
-            <LocationCard
-              vehicles={allVehicles}
-              selected={selected}
-              onSelect={mapProps.onSelect}
-              compact={compact}
-            />
+            <LocationCard vehicles={allVehicles} selected={selected} onSelect={mapProps.onSelect} compact={compact} />
           </div>
 
           {/* Haut droite : catégorie de véhicule */}
           {!compact ? (
             <div className="absolute top-3 right-3 z-10">
-              <Select
-                value={typeFilter}
-                onValueChange={(v) => onTypeFilterChange(v as TypeFilter)}
-              >
-                <SelectTrigger
-                  className="bg-popover shadow-md"
-                  aria-label="Catégorie de véhicule"
-                >
+              <Select value={typeFilter} onValueChange={(v) => onTypeFilterChange(v as TypeFilter)}>
+                <SelectTrigger className="bg-popover shadow-md" aria-label="Catégorie de véhicule">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent position="popper" align="end">
@@ -397,9 +298,7 @@ export function FleetMapCard({
           <div className="absolute bottom-7 left-3 z-10 flex items-end gap-2">
             <button
               type="button"
-              onClick={() =>
-                setBasemap((b) => (b === "plan" ? "satellite" : "plan"))
-              }
+              onClick={() => setBasemap((b) => (b === "plan" ? "satellite" : "plan"))}
               className={cn(
                 "flex size-14 flex-col items-center justify-end overflow-hidden rounded-lg border-2 border-popover pb-1 font-medium text-[10px] shadow-md",
                 "focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -407,11 +306,7 @@ export function FleetMapCard({
                   ? "bg-linear-to-br from-emerald-800 via-emerald-700 to-sky-900 text-white"
                   : "bg-linear-to-br from-slate-100 via-amber-50 to-sky-100 text-slate-800",
               )}
-              aria-label={
-                basemap === "plan"
-                  ? "Afficher la vue satellite"
-                  : "Afficher le plan"
-              }
+              aria-label={basemap === "plan" ? "Afficher la vue satellite" : "Afficher le plan"}
             >
               <Layers className="mb-auto mt-1.5 size-4" />
               {basemap === "plan" ? "Satellite" : "Plan"}
@@ -466,9 +361,7 @@ export function FleetMapCard({
                       >
                         <span className={cn("size-2.5 rounded-full", c.dot)} />
                         <span className="flex-1">{c.label}</span>
-                        <span className="font-semibold tabular-nums">
-                          {counts[c.value]}
-                        </span>
+                        <span className="font-semibold tabular-nums">{counts[c.value]}</span>
                       </button>
                     </li>
                   );

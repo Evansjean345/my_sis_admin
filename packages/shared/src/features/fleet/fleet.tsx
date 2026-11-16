@@ -7,39 +7,28 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { ArrowLeft } from "lucide-react";
 
-import { ErrorState } from "@/components/query-state";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useFleet, useTrack } from "@/hooks/api/use-fleet";
-import { useVehicle } from "@/hooks/api/use-vehicles";
-import { toNumber } from "@/lib/format";
-import { summarizeTrack, toSegments } from "@/lib/track";
-import type { VehicleDetail } from "@/types/vehicle";
-
-import { FleetAlerts } from "./fleet-alerts";
-import { FleetKpis } from "./fleet-kpis";
-import { FleetMapCard, type TypeFilter } from "./fleet-map-card";
-import { FleetQuickLinks } from "./fleet-quick-links";
-import {
-  CATEGORY_OF,
-  deriveAlerts,
-  type FleetCategory,
-  fleetState,
-} from "./fleet-state";
-import { FleetVehicleList } from "./fleet-vehicle-list";
-import { REPLAY_IDLE, type ReplayState } from "./trip-replay";
-import { type TrackPeriod, useTrackRange } from "./use-track-range";
-import { VehicleTripPanel } from "./vehicle-trip-panel";
+import { ErrorState } from "@shared/components/query-state";
+import { Badge } from "@shared/components/ui/badge";
+import { Button } from "@shared/components/ui/button";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@shared/components/ui/card";
+import { ScrollArea } from "@shared/components/ui/scroll-area";
+import { Skeleton } from "@shared/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@shared/components/ui/tabs";
+import { FleetAlerts } from "@shared/features/fleet/fleet-alerts";
+import { FleetKpis } from "@shared/features/fleet/fleet-kpis";
+import { FleetMapCard, type TypeFilter } from "@shared/features/fleet/fleet-map-card";
+import { FleetQuickLinks } from "@shared/features/fleet/fleet-quick-links";
+import { CATEGORY_OF, deriveAlerts, type FleetCategory, fleetState } from "@shared/features/fleet/fleet-state";
+import { FleetVehicleList } from "@shared/features/fleet/fleet-vehicle-list";
+import { REPLAY_IDLE, type ReplayState } from "@shared/features/fleet/trip-replay";
+import { type TrackPeriod, useTrackRange } from "@shared/features/fleet/use-track-range";
+import { VehicleTripPanel } from "@shared/features/fleet/vehicle-trip-panel";
+import { useFleet, useTrack } from "@shared/hooks/api/use-fleet";
+import { useVehicle } from "@shared/hooks/api/use-vehicles";
+import { useLiveVehicles } from "@shared/hooks/use-live-vehicles";
+import { toNumber } from "@shared/lib/format";
+import { summarizeTrack, toSegments } from "@shared/lib/track";
+import type { VehicleDetail } from "@shared/types/vehicle";
 
 interface FleetProps {
   /** Vue dédiée à un véhicule (/dashboard/fleet/[id]). */
@@ -76,8 +65,7 @@ export function Fleet({ vehicleId }: FleetProps) {
       allVehicles.filter(
         (v) =>
           v.id === selectedId ||
-          ((typeFilter === "all" || v.vehicleType === typeFilter) &&
-            !hidden.has(CATEGORY_OF[fleetState(v)])),
+          ((typeFilter === "all" || v.vehicleType === typeFilter) && !hidden.has(CATEGORY_OF[fleetState(v)])),
       ),
     [allVehicles, typeFilter, hidden, selectedId],
   );
@@ -99,8 +87,7 @@ export function Fleet({ vehicleId }: FleetProps) {
       summary,
     };
   }, [track.data, limit]);
-  const lastHeading =
-    trackData?.points[trackData.points.length - 1]?.direction ?? null;
+  const lastHeading = trackData?.points[trackData.points.length - 1]?.direction ?? null;
 
   const select = useCallback(
     (id: string | null) => {
@@ -159,12 +146,7 @@ export function Fleet({ vehicleId }: FleetProps) {
   ) : null;
 
   if (single && singleVehicle.isError) {
-    return (
-      <ErrorState
-        error={singleVehicle.error}
-        onRetry={() => void singleVehicle.refetch()}
-      />
-    );
+    return <ErrorState error={singleVehicle.error} onRetry={() => void singleVehicle.refetch()} />;
   }
 
   return (
@@ -173,31 +155,20 @@ export function Fleet({ vehicleId }: FleetProps) {
       {single ? (
         <div>
           <Button variant="ghost" size="sm" asChild className="-ml-2">
-            <Link
-              href={`/dashboard/fleet?vehicle=${vehicleId}`}
-              prefetch={false}
-            >
+            <Link href={`/dashboard/fleet?vehicle=${vehicleId}`} prefetch={false}>
               <ArrowLeft data-icon="inline-start" />
               Toute la flotte
             </Link>
           </Button>
         </div>
       ) : (
-        <FleetKpis
-          vehicles={fleet.vehicles}
-          total={fleet.total}
-          loading={fleet.isPending}
-        />
+        <FleetKpis vehicles={allVehicles} total={fleet.total} loading={fleet.isPending} />
       )}
 
       <div className="grid gap-4 xl:h-[calc(100dvh-var(--dashboard-header-height)-12rem)] xl:min-h-[600px] xl:grid-cols-[minmax(0,1fr)_380px]">
         <FleetMapCard
           className="h-[70dvh] xl:h-full"
-          title={
-            single && selected
-              ? `Suivi de ${selected.registration}`
-              : "Suivi en temps réel"
-          }
+          title={single && selected ? `Suivi de ${selected.registration}` : "Suivi en temps réel"}
           compact={single}
           allVehicles={allVehicles}
           vehicles={visibleVehicles}
@@ -210,9 +181,7 @@ export function Fleet({ vehicleId }: FleetProps) {
           onTypeFilterChange={setTypeFilter}
           hiddenCategories={hidden}
           onToggleCategory={toggleCategory}
-          refreshing={
-            fleet.isFetching || singleVehicle.isFetching || track.isFetching
-          }
+          refreshing={fleet.isFetching || singleVehicle.isFetching || track.isFetching}
           onRefresh={refresh}
         />
 
@@ -222,23 +191,14 @@ export function Fleet({ vehicleId }: FleetProps) {
               <CardTitle className="flex items-center gap-2">
                 {sideTab === "alerts" ? "Alertes en direct" : "Véhicules"}
                 <Badge
-                  variant={
-                    sideTab === "alerts" && alerts.length > 0
-                      ? "destructive"
-                      : "secondary"
-                  }
+                  variant={sideTab === "alerts" && alerts.length > 0 ? "destructive" : "secondary"}
                   className="rounded-full"
                 >
-                  {sideTab === "alerts"
-                    ? alerts.length
-                    : visibleVehicles.length}
+                  {sideTab === "alerts" ? alerts.length : visibleVehicles.length}
                 </Badge>
               </CardTitle>
               <CardAction>
-                <Tabs
-                  value={sideTab}
-                  onValueChange={(v) => setSideTab(v as "alerts" | "vehicles")}
-                >
+                <Tabs value={sideTab} onValueChange={(v) => setSideTab(v as "alerts" | "vehicles")}>
                   <TabsList>
                     <TabsTrigger value="alerts" className="text-xs">
                       Alertes
@@ -251,7 +211,7 @@ export function Fleet({ vehicleId }: FleetProps) {
               </CardAction>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 px-0">
-              <ScrollArea className="h-105 xl:h-full">
+              <ScrollArea className="h-[420px] xl:h-full">
                 <div className="px-4 pb-2">
                   {fleet.isPending ? (
                     <div className="flex flex-col gap-2.5">
@@ -263,10 +223,7 @@ export function Fleet({ vehicleId }: FleetProps) {
                   ) : fleet.isError ? (
                     <ErrorState error={fleet.error} onRetry={fleet.refetch} />
                   ) : sideTab === "alerts" ? (
-                    <FleetAlerts
-                      alerts={alerts}
-                      onSelect={(id) => select(id)}
-                    />
+                    <FleetAlerts alerts={alerts} onSelect={(id) => select(id)} />
                   ) : (
                     <FleetVehicleList
                       vehicles={visibleVehicles}
